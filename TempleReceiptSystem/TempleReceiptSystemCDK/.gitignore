@@ -1,0 +1,16 @@
+node_modules
+cdk.out
+dist
+.env
+.DS_Store
+*.log
+
+# Test coverage
+coverage
+
+# Compiled JavaScript (except config files and Lambda handlers)
+*.js
+*.js.map
+!jest.config.js
+!lambda/**/index.js
+!lambda/**/*.js

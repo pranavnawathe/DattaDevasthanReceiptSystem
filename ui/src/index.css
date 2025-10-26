@@ -1,0 +1,41 @@
+@import "tailwindcss";
+
+/* Tailwind v4 Custom Theme */
+@theme {
+  --color-primary: #FF6B35;
+  --color-secondary: #004E89;
+  --color-accent: #F7B801;
+  --color-success: #06A77D;
+  --color-error: #D62828;
+}
+
+:root {
+  font-family: 'Segoe UI', system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color: #2B2D42;
+  background-color: #F8F9FA;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+/* Support for Devanagari (Marathi) characters */
+@font-face {
+  font-family: 'Marathi';
+  src: local('Noto Sans Devanagari'), local('Mangal'), local('Arial Unicode MS');
+  unicode-range: U+0900-097F;
+}
+
+.marathi {
+  font-family: 'Marathi', 'Noto Sans Devanagari', 'Mangal', sans-serif;
+}

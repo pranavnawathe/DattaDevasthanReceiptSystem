@@ -1,0 +1,19 @@
+{
+  "name": "receipts-handler",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.913.0",
+    "@aws-sdk/client-s3": "^3.913.0",
+    "@aws-sdk/lib-dynamodb": "^3.913.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.145",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.3.3"
+  }
+}

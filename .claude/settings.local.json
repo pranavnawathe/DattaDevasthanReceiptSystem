@@ -1,0 +1,16 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run build)",
+      "Bash(mkdir -p common/utils common/db common/services common/validation common/templates)",
+      "Bash(npm install)",
+      "Bash(npm test)",
+      "Bash(npm run test:coverage)",
+      "Bash(npx ts-node test-manual.ts)",
+      "Bash(npx cdk deploy --all --require-approval never --profile temple-admin)",
+      "Bash(aws logs tail /aws/lambda/TempleApiStack-ReceiptsFn10508B73-A5ldYXG6g9Wd --since 1m --profile temple-admin --region ap-south-1)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

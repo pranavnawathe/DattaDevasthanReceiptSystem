@@ -1,0 +1,61 @@
+# macOS
+.DS_Store
+
+# Test files
+test-files/
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+*.js
+*.d.ts
+*.js.map
+*.d.ts.map
+cdk.out/
+
+# Environment files
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+npm-debug.log*
+
+# CDK
+cdk.context.json
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Exceptions - keep these JS/TS files
+!jest.config.js
+!vite.config.ts
+!tailwind.config.js
+!postcss.config.js
+
+# Keep TypeScript source files
+!*.ts
+!*.tsx
+
+# But exclude compiled files in lambda/receipts
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts/*.js
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts/*.d.ts
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts/*.js.map
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts/*.d.ts.map
+
+# But exclude compiled files in lambda/common except TypeScript
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/*.js
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/*.d.ts
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/*.js.map
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/*.d.ts.map
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/**/*.js
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/**/*.d.ts
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/**/*.js.map
+TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common/**/*.d.ts.map

@@ -1,0 +1,27 @@
+{
+  "name": "temple-receipt-common",
+  "version": "1.0.0",
+  "description": "Shared utilities and types for Temple Receipt System",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.913.0",
+    "@aws-sdk/client-s3": "^3.913.0",
+    "@aws-sdk/lib-dynamodb": "^3.913.0",
+    "@aws-sdk/s3-request-presigner": "^3.917.0",
+    "@types/pdfkit": "^0.17.3",
+    "pdfkit": "^0.17.2"
+  },
+  "devDependencies": {
+    "@types/jest": "^29.5.12",
+    "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3"
+  }
+}

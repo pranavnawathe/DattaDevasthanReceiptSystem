@@ -174,10 +174,17 @@ Both have been merged into this monorepo for easier management and development.
 
 ## Documentation
 
-- [CLAUDE.md](CLAUDE.md) - AI assistant project instructions
-- [UI_DEMO_GUIDE.md](UI_DEMO_GUIDE.md) - User guide with screenshots
-- [TempleReceiptSystem/README.md](TempleReceiptSystem/README.md) - Backend documentation
-- [TempleReceiptSystem/overall-design.md](TempleReceiptSystem/overall-design.md) - System architecture
+### 📚 Complete Documentation
+See **[docs/README.md](docs/README.md)** for the full documentation index.
+
+### Quick Links
+- **[Project Overview](docs/PROJECT_OVERVIEW.md)** - Comprehensive project summary
+- **[Project Status & Roadmap](docs/PROJECT_STATUS.md)** - Current status and future plans
+- **[System Architecture](docs/architecture/ARCHITECTURE.md)** - Technical architecture deep-dive
+- **[Backend Documentation](docs/components/BACKEND.md)** - Backend technical reference
+- **[Frontend Documentation](docs/components/FRONTEND.md)** - Frontend technical reference
+- **[User Guide](UI_DEMO_GUIDE.md)** - User manual with screenshots
+- **[AI Assistant Guide](CLAUDE.md)** - Claude Code project instructions
 
 ## Future Enhancements
 

@@ -12,6 +12,12 @@ export class FoundationStack extends Stack {
     super(scope, id, props);
 
     // DynamoDB Table
+    // Single table design supporting multiple entity types:
+    // - Receipts: PK=ORG#<orgId>, SK=RCPT#<receiptNumber>
+    // - Donors: PK=ORG#<orgId>, SK=DONOR#<donorId>
+    // - Ranges: PK=ORG#<orgId>, SK=RANGE#<rangeId>
+    // - Aliases: PK=ORG#<orgId>, SK=ALIAS#<type>#<value>
+    // - Counters (Legacy): PK=ORG#<orgId>, SK=COUNTER#RECEIPT#<year>
     this.donationsTable = new Table(this, 'DonationsTable', {
       partitionKey: { name: 'PK', type: AttributeType.STRING },
       sortKey: { name: 'SK', type: AttributeType.STRING },

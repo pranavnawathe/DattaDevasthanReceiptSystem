@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createDonation = createDonation;
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const dynamo_client_1 = require("../db/dynamo-client");
-const counter_1 = require("../db/counter");
+const range_allocator_1 = require("./range-allocator");
 const donor_resolver_1 = require("./donor-resolver");
 const types_1 = require("../types");
 const normalizers_1 = require("../utils/normalizers");
@@ -51,10 +51,22 @@ async function createDonation(orgId, request) {
     const { donorId, isNew, existingProfile } = donorResolution;
     // 5. Get donation date (use provided or today)
     const donationDate = (0, normalizers_1.normalizeDate)(request.date) || (0, normalizers_1.getTodayISO)();
-    const year = parseInt(donationDate.split('-')[0], 10);
-    // 6. Get next receipt number (atomic counter)
-    const receiptNo = await (0, counter_1.getNextReceiptNumber)(orgId, year);
-    console.log(`Creating donation: ${receiptNo} for donor: ${donorId} (isNew: ${isNew})`);
+    // 6. Get current year for range lookup
+    const currentYear = new Date().getFullYear();
+    // 7. Allocate receipt number from active range
+    let allocation;
+    try {
+        allocation = await (0, range_allocator_1.allocateFromRange)(orgId, currentYear, donationDate, request.flexibleMode || false);
+    }
+    catch (error) {
+        if (error instanceof range_allocator_1.RangeAllocationError) {
+            throw new Error(`Receipt allocation failed: ${error.message} (${error.code})`);
+        }
+        throw error;
+    }
+    const receiptNo = allocation.receiptNo;
+    const rangeId = allocation.rangeId;
+    console.log(`Creating donation: ${receiptNo} from range ${rangeId} for donor: ${donorId} (isNew: ${isNew})`);
     // 7. Build donation item
     const donationItem = {
         PK: types_1.Keys.PK.org(orgId),
@@ -65,6 +77,7 @@ async function createDonation(orgId, request) {
         GSI2SK: types_1.Keys.GSI2.receipt(receiptNo),
         orgId,
         receiptNo,
+        rangeId,
         date: donationDate,
         donorId,
         donor: {

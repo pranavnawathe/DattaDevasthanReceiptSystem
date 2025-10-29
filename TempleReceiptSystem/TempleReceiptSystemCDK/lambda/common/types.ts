@@ -21,6 +21,7 @@ export interface DonationItem {
   GSI2SK: string;                // RCPT#<receiptNo>
   orgId: string;
   receiptNo: string;             // e.g., "2025-00071"
+  rangeId?: string;              // e.g., "2025-A" (range that allocated this receipt)
   date: string;                  // ISO date: yyyy-mm-dd
   donorId: string;               // e.g., "D_8b62f34a12ab"
   donor: DonorInfo;
@@ -79,7 +80,7 @@ export interface AliasItem {
 }
 
 /**
- * Receipt counter item
+ * Receipt counter item (Legacy - being replaced by RangeItem)
  * PK: ORG#<orgId>
  * SK: COUNTER#RECEIPT#<year>
  */
@@ -89,6 +90,41 @@ export interface CounterItem {
   year: number;
   currentSeq: number;            // Current sequence number
   updatedAt: number;
+}
+
+/**
+ * Range item for range-based receipt numbering
+ * PK: ORG#<orgId>
+ * SK: RANGE#<rangeId>
+ */
+export interface RangeItem {
+  PK: string;                    // ORG#<orgId>
+  SK: string;                    // RANGE#<rangeId>
+  type: 'range';
+  rangeId: string;               // Unique ID for the range (e.g., "2025-A")
+  alias: string;                 // Human-friendly name (e.g., "PHYS-BOOK-2025-07")
+  year: number;                  // Year for this range (e.g., 2025)
+  start: number;                 // Starting number (e.g., 1)
+  end: number;                   // Ending number (e.g., 9999)
+  next: number;                  // Next number to allocate (e.g., 154)
+  status: RangeStatus;           // Current status
+  version: number;               // Optimistic locking version
+  createdBy: string;             // User ID who created
+  createdAt: string;             // ISO timestamp
+  updatedAt?: string;            // ISO timestamp
+  lockedBy?: string;             // User ID who locked (if status=locked)
+  lockedAt?: string;             // ISO timestamp
+}
+
+/**
+ * Range status enum
+ */
+export enum RangeStatus {
+  DRAFT = 'draft',               // Newly created, not yet usable
+  ACTIVE = 'active',             // Available for receipt issuance
+  LOCKED = 'locked',             // Temporarily paused (e.g., audit)
+  EXHAUSTED = 'exhausted',       // All numbers used (next > end)
+  ARCHIVED = 'archived',         // Retired/archived
 }
 
 // ============================================================================
@@ -104,6 +140,7 @@ export interface CreateReceiptRequest {
   payment: PaymentInfo;
   eligible80G?: boolean;            // Default: true
   date?: string;                    // Optional override (default: today)
+  flexibleMode?: boolean;           // Allow year mismatch (admin override)
 }
 
 /**
@@ -224,6 +261,38 @@ export interface DateRangeFilter {
 }
 
 /**
+ * List receipts request parameters
+ */
+export interface ListReceiptsRequest {
+  date?: string;                    // Single date (YYYY-MM-DD)
+  startDate?: string;               // Range start date
+  endDate?: string;                 // Range end date
+  rangeId?: string;                 // Filter by range ID (e.g., "2025-H")
+  receiptNo?: string;               // Exact receipt number lookup
+  donorId?: string;                 // Filter by donor ID
+  includeVoided?: boolean;          // Include voided receipts (default: false)
+  limit?: number;                   // Pagination limit (default: 50, max: 100)
+  nextToken?: string;               // Pagination token (base64 encoded)
+}
+
+/**
+ * Donor search request parameters
+ */
+export interface DonorSearchRequest {
+  query: string;                    // Search query (phone, PAN, email, or name)
+  type?: 'phone' | 'pan' | 'email' | 'name'; // Identifier type (auto-detected if not provided)
+}
+
+/**
+ * Donor search response
+ */
+export interface DonorSearchResponse {
+  found: boolean;
+  donor?: DonorItem;
+  recentReceipts?: DonationItem[];  // Last 5 receipts
+}
+
+/**
  * Donor resolution result
  */
 export interface DonorResolution {
@@ -257,6 +326,7 @@ export interface KeyPatterns {
     aliasPAN: (panHash: string) => string;
     aliasEmail: (emailHash: string) => string;
     counter: (year: number) => string;
+    range: (rangeId: string) => string;
   };
   GSI1: {
     donor: (donorId: string) => string;
@@ -282,6 +352,7 @@ export const Keys: KeyPatterns = {
     aliasPAN: (panHash: string) => `ALIAS#PAN#${panHash}`,
     aliasEmail: (emailHash: string) => `ALIAS#EMAIL#${emailHash}`,
     counter: (year: number) => `COUNTER#RECEIPT#${year}`,
+    range: (rangeId: string) => `RANGE#${rangeId}`,
   },
   GSI1: {
     donor: (donorId: string) => `DONOR#${donorId}`,

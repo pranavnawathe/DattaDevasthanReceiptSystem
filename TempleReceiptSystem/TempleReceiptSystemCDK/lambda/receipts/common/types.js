@@ -4,7 +4,18 @@
  * Matches the design document data model
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Keys = exports.DonationPurpose = exports.PaymentMode = void 0;
+exports.Keys = exports.DonationPurpose = exports.PaymentMode = exports.RangeStatus = void 0;
+/**
+ * Range status enum
+ */
+var RangeStatus;
+(function (RangeStatus) {
+    RangeStatus["DRAFT"] = "draft";
+    RangeStatus["ACTIVE"] = "active";
+    RangeStatus["LOCKED"] = "locked";
+    RangeStatus["EXHAUSTED"] = "exhausted";
+    RangeStatus["ARCHIVED"] = "archived";
+})(RangeStatus || (exports.RangeStatus = RangeStatus = {}));
 /**
  * Payment modes
  */
@@ -48,6 +59,7 @@ exports.Keys = {
         aliasPAN: (panHash) => `ALIAS#PAN#${panHash}`,
         aliasEmail: (emailHash) => `ALIAS#EMAIL#${emailHash}`,
         counter: (year) => `COUNTER#RECEIPT#${year}`,
+        range: (rangeId) => `RANGE#${rangeId}`,
     },
     GSI1: {
         donor: (donorId) => `DONOR#${donorId}`,

@@ -16,7 +16,8 @@ export class ApiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: ApiStackProps) {
     super(scope, id, props);
 
-    const fn = new lambda.Function(this, 'ReceiptsFn', {
+    // Receipts Lambda Function
+    const receiptsFn = new lambda.Function(this, 'ReceiptsFn', {
       runtime: lambda.Runtime.NODEJS_20_X,
       architecture: lambda.Architecture.ARM_64,
       handler: 'receipts/index.handler',
@@ -31,9 +32,25 @@ export class ApiStack extends cdk.Stack {
     });
 
     // Grant Lambda permissions to access DynamoDB and S3
-    props.donationsTable.grantReadWriteData(fn);
-    props.receiptsBucket.grantReadWrite(fn);
-    props.exportsBucket.grantReadWrite(fn);
+    props.donationsTable.grantReadWriteData(receiptsFn);
+    props.receiptsBucket.grantReadWrite(receiptsFn);
+    props.exportsBucket.grantReadWrite(receiptsFn);
+
+    // Ranges Lambda Function
+    const rangesFn = new lambda.Function(this, 'RangesFn', {
+      runtime: lambda.Runtime.NODEJS_20_X,
+      architecture: lambda.Architecture.ARM_64,
+      handler: 'ranges/index.handler',
+      code: lambda.Code.fromAsset('lambda'),
+      memorySize: 256,
+      timeout: cdk.Duration.seconds(10),
+      environment: {
+        TABLE_NAME: props.donationsTable.tableName,
+      },
+    });
+
+    // Grant Ranges Lambda permissions to access DynamoDB
+    props.donationsTable.grantReadWriteData(rangesFn);
 
     const httpApi = new apigwv2.HttpApi(this, 'TempleHttpApi', {
       corsPreflight: {
@@ -41,6 +58,7 @@ export class ApiStack extends cdk.Stack {
         allowMethods: [
           apigwv2.CorsHttpMethod.GET,
           apigwv2.CorsHttpMethod.POST,
+          apigwv2.CorsHttpMethod.PUT,
           apigwv2.CorsHttpMethod.OPTIONS,
         ],
         allowHeaders: ['Content-Type', 'Authorization'],
@@ -48,10 +66,19 @@ export class ApiStack extends cdk.Stack {
       },
     });
 
-    const integration = new integrations.HttpLambdaIntegration('ReceiptsIntegration', fn);
-    httpApi.addRoutes({ path: '/health', methods: [apigwv2.HttpMethod.GET], integration });
-    httpApi.addRoutes({ path: '/receipts', methods: [apigwv2.HttpMethod.POST], integration });
-    httpApi.addRoutes({ path: '/receipts/{receiptNo}/download', methods: [apigwv2.HttpMethod.GET], integration });
+    // Receipts routes
+    const receiptsIntegration = new integrations.HttpLambdaIntegration('ReceiptsIntegration', receiptsFn);
+    httpApi.addRoutes({ path: '/health', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
+    httpApi.addRoutes({ path: '/receipts', methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: receiptsIntegration });
+    httpApi.addRoutes({ path: '/receipts/search', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
+    httpApi.addRoutes({ path: '/receipts/donor/{donorId}', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
+    httpApi.addRoutes({ path: '/receipts/{receiptNo}/download', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
+
+    // Ranges routes
+    const rangesIntegration = new integrations.HttpLambdaIntegration('RangesIntegration', rangesFn);
+    httpApi.addRoutes({ path: '/ranges', methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: rangesIntegration });
+    httpApi.addRoutes({ path: '/ranges/{rangeId}', methods: [apigwv2.HttpMethod.GET], integration: rangesIntegration });
+    httpApi.addRoutes({ path: '/ranges/{rangeId}/status', methods: [apigwv2.HttpMethod.PUT], integration: rangesIntegration });
 
     new cdk.CfnOutput(this, 'HttpApiUrl', { value: httpApi.apiEndpoint });
   }

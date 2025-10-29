@@ -17,6 +17,7 @@ export interface CreateReceiptRequest {
   payment: PaymentInfo;
   date?: string;
   eligible80G?: boolean;
+  flexibleMode?: boolean;  // Allow year mismatch (admin override)
 }
 
 // API Response Types
@@ -58,3 +59,63 @@ export const DONATION_CATEGORIES = {
 } as const;
 
 export type DonationCategory = keyof typeof DONATION_CATEGORIES;
+
+// Range Management Types
+export type RangeStatus = 'draft' | 'active' | 'locked' | 'exhausted' | 'archived';
+
+export interface RangeItem {
+  PK: string;
+  SK: string;
+  type: 'range';
+  rangeId: string;
+  alias: string;
+  year: number;
+  start: number;
+  end: number;
+  next: number;
+  status: RangeStatus;
+  version: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt?: string;
+  lockedBy?: string;
+  lockedAt?: string;
+  remaining?: number;
+}
+
+export interface CreateRangeRequest {
+  alias: string;
+  year: number;
+  start: number;
+  end: number;
+  suffix?: string;
+  createdBy: string;
+}
+
+export interface UpdateRangeStatusRequest {
+  action: 'activate' | 'lock' | 'unlock' | 'archive';
+  userId: string;
+}
+
+export interface ListRangesResponse {
+  success: boolean;
+  ranges: RangeItem[];
+  count: number;
+}
+
+export interface GetRangeResponse {
+  success: boolean;
+  range: RangeItem;
+}
+
+export interface CreateRangeResponse {
+  success: boolean;
+  range: RangeItem;
+  message: string;
+}
+
+export interface UpdateRangeStatusResponse {
+  success: boolean;
+  range: RangeItem;
+  message: string;
+}

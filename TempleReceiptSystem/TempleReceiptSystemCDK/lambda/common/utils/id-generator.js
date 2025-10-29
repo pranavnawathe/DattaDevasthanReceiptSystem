@@ -85,4 +85,3 @@ function parseReceiptNo(receiptNo) {
 function generateCorrelationId() {
     return `req_${Date.now()}_${(0, crypto_1.randomUUID)().substring(0, 8)}`;
 }
-//# sourceMappingURL=id-generator.js.map

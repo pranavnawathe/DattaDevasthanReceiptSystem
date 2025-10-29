@@ -38,20 +38,26 @@ TempleReceiptSystemCDK/
 │   ├── api-stack.ts               # API Gateway + Lambda
 │   └── ui-stack.ts                # S3 website hosting
 ├── lambda/
-│   ├── receipts/                  # Lambda function code
-│   │   ├── index.ts               # Main handler
+│   ├── receipts/                  # Receipts Lambda function
+│   │   ├── index.ts/js            # Main handler (receipt CRUD)
 │   │   ├── package.json           # Runtime dependencies
-│   │   └── common/                # Symlinked to ../common
-│   └── common/                    # Shared code
+│   │   └── common/                # Compiled JS from ../common
+│   ├── ranges/                    # Ranges Lambda function
+│   │   └── index.ts/js            # Range management handler
+│   └── common/                    # Shared code (TypeScript source)
 │       ├── types.ts               # Type definitions
 │       ├── db/                    # Data access layer
 │       │   ├── dynamo-client.ts   # DynamoDB client setup
-│       │   ├── counter.ts         # Receipt counter logic
+│       │   ├── counter.ts         # Receipt counter logic (legacy)
 │       │   └── queries.ts         # Query builders
 │       ├── services/              # Business logic
-│       │   ├── donation-service.ts
-│       │   ├── donor-resolver.ts
-│       │   └── receipt-artifact.ts
+│       │   ├── donation-service.ts      # Receipt creation orchestration
+│       │   ├── donor-resolver.ts        # Donor deduplication
+│       │   ├── receipt-artifact.ts      # PDF generation
+│       │   ├── range-allocator.ts       # Range-based allocation (NEW)
+│       │   ├── range-service.ts         # Range CRUD operations (NEW)
+│       │   ├── range-utils.ts           # Range validation helpers (NEW)
+│       │   └── receipt-listing.ts       # Receipt search/listing (NEW)
 │       ├── utils/                 # Utilities
 │       │   ├── id-generator.ts
 │       │   ├── crypto.ts
@@ -184,6 +190,45 @@ httpApi.addRoutes({
 
 httpApi.addRoutes({
   path: '/receipts/{receiptNo}/download',
+  methods: [apigwv2.HttpMethod.GET],
+  integration,
+});
+
+// Range management routes (NEW)
+const rangesIntegration = new integrations.HttpLambdaIntegration('RangesIntegration', rangesFn);
+httpApi.addRoutes({
+  path: '/ranges',
+  methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+  integration: rangesIntegration,
+});
+
+httpApi.addRoutes({
+  path: '/ranges/{rangeId}',
+  methods: [apigwv2.HttpMethod.GET],
+  integration: rangesIntegration,
+});
+
+httpApi.addRoutes({
+  path: '/ranges/{rangeId}/status',
+  methods: [apigwv2.HttpMethod.PUT],
+  integration: rangesIntegration,
+});
+
+// Receipt listing routes (NEW)
+httpApi.addRoutes({
+  path: '/receipts',
+  methods: [apigwv2.HttpMethod.GET],  // Added GET for listing
+  integration,
+});
+
+httpApi.addRoutes({
+  path: '/receipts/search',
+  methods: [apigwv2.HttpMethod.GET],
+  integration,
+});
+
+httpApi.addRoutes({
+  path: '/receipts/donor/{donorId}',
   methods: [apigwv2.HttpMethod.GET],
   integration,
 });

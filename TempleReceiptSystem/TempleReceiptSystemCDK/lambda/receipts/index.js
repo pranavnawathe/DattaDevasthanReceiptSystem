@@ -5,6 +5,7 @@ const donation_service_1 = require("../common/services/donation-service");
 const receipt_artifact_1 = require("../common/services/receipt-artifact");
 const queries_1 = require("../common/db/queries");
 const crypto_1 = require("../common/utils/crypto");
+const receipt_listing_1 = require("../common/services/receipt-listing");
 // Organization ID (hardcoded for now, will come from auth context later)
 const ORG_ID = 'DATTA-SAKHARAPA';
 function json(statusCode, body) {
@@ -48,6 +49,86 @@ const handler = async (event) => {
                 pdfKey,
                 message: 'Donation receipt created successfully',
             });
+        }
+        // List/search receipts (GET /receipts with query params)
+        if (method === 'GET' && path === '/receipts') {
+            const queryParams = event.queryStringParameters || {};
+            console.log('Listing receipts with params:', queryParams);
+            const { date, startDate, endDate, rangeId, receiptNo, donorId, includeVoided, limit, nextToken, } = queryParams;
+            const pagination = {
+                limit: limit ? parseInt(limit, 10) : undefined,
+                lastEvaluatedKey: nextToken,
+            };
+            const includeVoidedFlag = includeVoided === 'true';
+            // Exact receipt number lookup
+            if (receiptNo) {
+                const receipt = await (0, receipt_listing_1.getReceiptByNumber)(ORG_ID, receiptNo);
+                return json(200, {
+                    success: true,
+                    items: receipt ? [receipt] : [],
+                    count: receipt ? 1 : 0,
+                });
+            }
+            // List by donor ID
+            if (donorId) {
+                const result = await (0, receipt_listing_1.listReceiptsByDonor)(ORG_ID, donorId, pagination, includeVoidedFlag);
+                return json(200, { success: true, ...result });
+            }
+            // List by range ID
+            if (rangeId) {
+                const result = await (0, receipt_listing_1.listReceiptsByRange)(ORG_ID, rangeId, pagination, includeVoidedFlag);
+                return json(200, { success: true, ...result });
+            }
+            // List by date range
+            if (startDate && endDate) {
+                const result = await (0, receipt_listing_1.listReceiptsByDateRange)(ORG_ID, startDate, endDate, pagination, includeVoidedFlag);
+                return json(200, { success: true, ...result });
+            }
+            // List by single date (default to today if not specified)
+            const targetDate = date || new Date().toISOString().split('T')[0];
+            const result = await (0, receipt_listing_1.listReceiptsByDate)(ORG_ID, targetDate, pagination, includeVoidedFlag);
+            return json(200, { success: true, ...result });
+        }
+        // Search donor and get receipts (GET /receipts/search?donor=<query>)
+        if (method === 'GET' && path === '/receipts/search') {
+            const queryParams = event.queryStringParameters || {};
+            const { donor, type } = queryParams;
+            if (!donor) {
+                return json(400, { success: false, error: 'donor query parameter is required' });
+            }
+            console.log(`Searching donor: ${donor} (type: ${type || 'auto'})`);
+            // Search donor by identifier
+            const donorItem = await (0, receipt_listing_1.searchDonorByIdentifier)(ORG_ID, donor, type);
+            if (!donorItem) {
+                return json(200, {
+                    success: true,
+                    found: false,
+                });
+            }
+            // Get recent receipts for this donor (last 5)
+            const receiptsResult = await (0, receipt_listing_1.listReceiptsByDonor)(ORG_ID, donorItem.donorId, { limit: 5 });
+            return json(200, {
+                success: true,
+                found: true,
+                donor: donorItem,
+                recentReceipts: receiptsResult.items,
+            });
+        }
+        // Get donor's receipt history (GET /receipts/donor/{donorId})
+        if (method === 'GET' && path.startsWith('/receipts/donor/')) {
+            const donorId = path.split('/')[3];
+            if (!donorId) {
+                return json(400, { success: false, error: 'Donor ID is required' });
+            }
+            const queryParams = event.queryStringParameters || {};
+            const pagination = {
+                limit: queryParams.limit ? parseInt(queryParams.limit, 10) : undefined,
+                lastEvaluatedKey: queryParams.nextToken,
+            };
+            const includeVoidedFlag = queryParams.includeVoided === 'true';
+            console.log(`Fetching receipts for donor: ${donorId}`);
+            const result = await (0, receipt_listing_1.listReceiptsByDonor)(ORG_ID, donorId, pagination, includeVoidedFlag);
+            return json(200, { success: true, ...result });
         }
         // Get receipt download URL
         if (method === 'GET' && path.startsWith('/receipts/') && path.endsWith('/download')) {

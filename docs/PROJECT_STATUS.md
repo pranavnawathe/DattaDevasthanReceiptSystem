@@ -2,9 +2,9 @@
 
 ## Current Status
 
-**Version**: 1.0 (Phase 1 Complete)
+**Version**: 1.1 (Phase 1 + Range System)
 **Status**: ✅ **Production** - Live and operational
-**Last Updated**: October 26, 2025
+**Last Updated**: October 29, 2025
 
 ### Live Deployments
 
@@ -20,9 +20,13 @@
 #### ✅ Core Receipt Generation
 - [x] Bilingual PDF generation (Marathi देवनागरी + English)
 - [x] Traditional temple receipt format
+- [x] **Range-based receipt numbering** (physical book mirroring)
 - [x] Auto-incrementing receipt numbers (YYYY-NNNNN format)
-- [x] Year-based counter reset
+- [x] Year-based counter reset (legacy + range-based)
 - [x] Receipt download via presigned S3 URLs (1-hour expiry)
+- [x] **Range management API** (create, activate, lock, archive)
+- [x] **Overlap detection and validation**
+- [x] **Atomic receipt number allocation** (optimistic locking)
 
 #### ✅ Donor Management
 - [x] Donor information capture (name, mobile, PAN, email)
@@ -62,14 +66,15 @@
 
 #### ✅ Infrastructure & DevOps
 - [x] AWS CDK infrastructure as code (3 stacks)
-- [x] Lambda function with Node.js 20.x (ARM64)
-- [x] DynamoDB with GSI indexes
+- [x] **Lambda functions** with Node.js 20.x (ARM64): ReceiptsFn, RangesFn
+- [x] DynamoDB with GSI indexes (GSI1: donor lookups, GSI2: date queries)
 - [x] S3 buckets for receipts and exports
 - [x] API Gateway HTTP API with CORS
 - [x] Point-in-time recovery enabled
 - [x] Encryption at rest (DynamoDB + S3)
 - [x] CloudWatch logging
 - [x] Monorepo with Git version control
+- [x] **DynamoDB conditional writes** for atomic operations
 
 #### ✅ Code Quality
 - [x] TypeScript strict mode throughout
@@ -80,6 +85,27 @@
 - [x] Proper font embedding in Lambda
 - [x] Unit tests for utilities
 
+#### ✅ Range-Based Receipt Numbering (NEW - Oct 2025)
+- [x] **Range entity** in DynamoDB (draft/active/locked/exhausted/archived states)
+- [x] **Range CRUD API** (`GET /ranges`, `POST /ranges`, `PUT /ranges/{id}/status`)
+- [x] **Range validation** (overlap detection, single active range enforcement)
+- [x] **Atomic allocation** using DynamoDB conditional expressions
+- [x] **Optimistic locking** with version field
+- [x] **Year mismatch handling** (strict mode + flexible mode with admin override)
+- [x] **Range exhaustion detection** (auto-transition to EXHAUSTED status)
+- [x] **Receipt-to-range tracking** (rangeId field in DonationItem)
+
+#### ✅ Backend API (NEW - Oct 2025)
+- [x] **Receipt listing** (`GET /receipts` with query params)
+- [x] **Search by date** (single date or date range)
+- [x] **Search by receipt number** (exact match)
+- [x] **Search by range** (list all receipts from specific range)
+- [x] **Search by donor ID** (donor's receipt history)
+- [x] **Donor search** (`GET /receipts/search?donor=<query>`)
+- [x] **Search by phone/PAN/email** (with auto-detection)
+- [x] **Pagination support** (limit, nextToken)
+- [x] **Voided receipts filter** (includeVoided parameter)
+
 #### ✅ Documentation
 - [x] Comprehensive README
 - [x] Project overview documentation
@@ -88,6 +114,7 @@
 - [x] Frontend technical documentation
 - [x] User demo guide with screenshots
 - [x] Claude.md for AI assistant context
+- [x] **Range system design** (docs/in_progress/receipt_ids.md)
 
 ## Development Metrics
 
@@ -322,6 +349,17 @@
 
 ## Change Log
 
+### Version 1.1 (October 29, 2025)
+- ✅ **Range-based receipt numbering system** (physical book mirroring)
+- ✅ **Range management API** with full CRUD operations
+- ✅ **Overlap detection** and active range validation
+- ✅ **Atomic receipt allocation** with optimistic locking
+- ✅ **Receipt listing API** (search by date, donor, range, receipt number)
+- ✅ **Donor search API** (search by phone, PAN, email with auto-detection)
+- ✅ **Year mismatch validation** (strict/flexible modes)
+- ✅ **Pagination support** for list endpoints
+- ✅ Updated documentation with range system details
+
 ### Version 1.0 (October 26, 2025)
 - ✅ Initial release with core features
 - ✅ Backend (AWS CDK + Lambda + DynamoDB + S3)
@@ -357,5 +395,5 @@
 
 ---
 
-**Last Updated**: October 26, 2025
+**Last Updated**: October 29, 2025
 **Next Review**: December 1, 2025

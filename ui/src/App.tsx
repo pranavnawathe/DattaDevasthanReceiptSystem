@@ -3,8 +3,12 @@ import type { CreateReceiptResponse } from './types';
 import { Header } from './components/Header';
 import { DonationForm } from './components/DonationForm';
 import { ReceiptDisplay } from './components/ReceiptDisplay';
+import { RangeManagement } from './components/RangeManagement';
+
+type Tab = 'receipts' | 'ranges';
 
 function App() {
+  const [activeTab, setActiveTab] = useState<Tab>('receipts');
   const [receipt, setReceipt] = useState<CreateReceiptResponse | null>(null);
 
   const handleSuccess = (newReceipt: CreateReceiptResponse) => {
@@ -19,15 +23,56 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleTabChange = (tab: Tab) => {
+    setActiveTab(tab);
+    setReceipt(null); // Reset receipt when switching tabs
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {receipt ? (
-          <ReceiptDisplay receipt={receipt} onCreateAnother={handleCreateAnother} />
+      {/* Tab Navigation */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <nav className="flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => handleTabChange('receipts')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'receipts'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Receipt Entry
+            </button>
+            <button
+              onClick={() => handleTabChange('ranges')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'ranges'
+                  ? 'border-blue-600 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Range Management
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+        {activeTab === 'receipts' ? (
+          <div className="max-w-4xl mx-auto">
+            {receipt ? (
+              <ReceiptDisplay receipt={receipt} onCreateAnother={handleCreateAnother} />
+            ) : (
+              <DonationForm onSuccess={handleSuccess} />
+            )}
+          </div>
         ) : (
-          <DonationForm onSuccess={handleSuccess} />
+          <RangeManagement />
         )}
       </main>
 

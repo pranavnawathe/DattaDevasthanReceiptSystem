@@ -69,7 +69,19 @@ DattaDevasthanReceiptSystem/
 - AWS CDK CLI: `npm install -g aws-cdk`
 - An AWS account (deployed to ap-south-1 Mumbai region)
 
-### Backend Setup
+### Quick Start - Deploy Everything
+
+```bash
+# One command to build UI and deploy all stacks
+./deploy.sh
+
+# This script will:
+# 1. Build the UI (npm run build in ui/)
+# 2. Deploy all CDK stacks (Foundation, API, UI)
+# 3. Automatically upload UI files to S3 via CDK
+```
+
+### Manual Backend Setup
 
 ```bash
 cd TempleReceiptSystem/TempleReceiptSystemCDK
@@ -86,10 +98,11 @@ cd ../..
 npm run build
 
 # Deploy to AWS (requires AWS credentials)
-npm run deploy
+# Note: This also deploys the UI from ui/dist
+npx cdk deploy --all --profile temple-admin
 ```
 
-### Frontend Setup
+### Frontend Development
 
 ```bash
 cd ui

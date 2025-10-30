@@ -2,9 +2,9 @@
 
 ## Current Status
 
-**Version**: 1.1 (Phase 1 + Range System)
+**Version**: 1.2 (Phase 1 + Range System + Admin Home UI)
 **Status**: ✅ **Production** - Live and operational
-**Last Updated**: October 29, 2025
+**Last Updated**: October 30, 2025
 
 ### Live Deployments
 
@@ -63,6 +63,12 @@
 - [x] Conditional payment reference fields
 - [x] Loading states during submission
 - [x] Error handling and user feedback
+- [x] **Admin Home page** with active range selection (NEW - Oct 2025)
+- [x] **Range Selection Modal** with year filtering (NEW - Oct 2025)
+- [x] **Active Range Context** with localStorage persistence (NEW - Oct 2025)
+- [x] **Hash-based routing** (#home, #receipts, #ranges) (NEW - Oct 2025)
+- [x] **Route guards** preventing receipt entry without active range (NEW - Oct 2025)
+- [x] **Range health indicators** with low number warnings (NEW - Oct 2025)
 
 #### ✅ Infrastructure & DevOps
 - [x] AWS CDK infrastructure as code (3 stacks)
@@ -348,6 +354,18 @@
 | Mobile compatibility | Low | Medium | Responsive design tested |
 
 ## Change Log
+
+### Version 1.2 (October 30, 2025)
+- ✅ **Admin Home page** with active range selection UI
+- ✅ **Range Selection Modal** with year filtering (2024, 2025, 2026)
+- ✅ **Active Range Context** with React Context API and localStorage persistence
+- ✅ **Hash-based routing** (#home, #receipts, #ranges)
+- ✅ **Route guards** preventing receipt entry without active range selection
+- ✅ **Range health indicators** with progress bars and low number warnings (< 50)
+- ✅ **Quick Actions panel** with bilingual navigation tiles (Marathi + English)
+- ✅ **Bilingual labels throughout** - पावती तयार करा, श्रेणी व्यवस्थापन, etc.
+- ✅ **Active range banner** on receipt entry page showing current range
+- ✅ Fully responsive design for mobile and desktop
 
 ### Version 1.1 (October 29, 2025)
 - ✅ **Range-based receipt numbering system** (physical book mirroring)

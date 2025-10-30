@@ -249,23 +249,21 @@ export function AdminHome() {
 
             {/* Donation Export */}
             <button
-              disabled
-              className="p-6 bg-gray-50 border-2 border-gray-200 rounded-lg text-left cursor-not-allowed opacity-60"
-              title="लवकरच येत आहे"
+              onClick={() => window.location.hash = '#export'}
+              className="p-6 bg-white border-2 border-purple-200 rounded-lg hover:border-purple-400 hover:shadow-md text-left transition-all"
             >
               <div className="flex items-center mb-3">
                 <div className="flex-shrink-0">
-                  <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-8 w-8 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-lg font-semibold text-gray-400 marathi">निर्यात करा</h3>
-                  <p className="text-xs text-gray-500">Export</p>
+                  <h3 className="text-lg font-semibold text-gray-900 marathi">निर्यात करा</h3>
+                  <p className="text-xs text-gray-600">Export</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 marathi">टॅली साठी डेटा निर्यात करा</p>
-              <p className="mt-2 text-xs text-gray-400 marathi">लवकरच येत आहे</p>
+              <p className="text-sm text-gray-600 marathi">टॅली साठी डेटा निर्यात करा</p>
             </button>
 
             {/* Range Manager */}

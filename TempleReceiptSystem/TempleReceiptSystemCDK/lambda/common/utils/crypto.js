@@ -12,7 +12,7 @@ exports.maskPhone = maskPhone;
 exports.hashIdentifier = hashIdentifier;
 exports.shortHash = shortHash;
 exports.sanitizeForLogs = sanitizeForLogs;
-const crypto_1 = require("crypto");
+var crypto_1 = require("crypto");
 /**
  * Hash a PAN card number using SHA256
  * Returns hash with prefix for identification
@@ -21,8 +21,8 @@ const crypto_1 = require("crypto");
  * @returns Hash string with prefix (e.g., "h:sha256:abc123...")
  */
 function hashPAN(pan) {
-    const hash = (0, crypto_1.createHash)('sha256').update(pan).digest('hex');
-    return `h:sha256:${hash}`;
+    var hash = (0, crypto_1.createHash)('sha256').update(pan).digest('hex');
+    return "h:sha256:".concat(hash);
 }
 /**
  * Mask PAN for display - show first 5 and last 1 character
@@ -35,7 +35,7 @@ function maskPAN(pan) {
     if (pan.length !== 10) {
         throw new Error('Invalid PAN length');
     }
-    return `${pan.substring(0, 5)}****${pan.substring(9)}`;
+    return "".concat(pan.substring(0, 5), "****").concat(pan.substring(9));
 }
 /**
  * Hash email address using SHA256
@@ -45,8 +45,8 @@ function maskPAN(pan) {
  * @returns Hash string with prefix
  */
 function hashEmail(email) {
-    const hash = (0, crypto_1.createHash)('sha256').update(email).digest('hex');
-    return `h:sha256:${hash}`;
+    var hash = (0, crypto_1.createHash)('sha256').update(email).digest('hex');
+    return "h:sha256:".concat(hash);
 }
 /**
  * Mask email for display
@@ -56,11 +56,11 @@ function hashEmail(email) {
  * @returns Masked email
  */
 function maskEmail(email) {
-    const [local, domain] = email.split('@');
+    var _a = email.split('@'), local = _a[0], domain = _a[1];
     if (!local || !domain)
         return email;
-    const maskedLocal = local.length > 1 ? `${local[0]}***` : local;
-    return `${maskedLocal}@${domain}`;
+    var maskedLocal = local.length > 1 ? "".concat(local[0], "***") : local;
+    return "".concat(maskedLocal, "@").concat(domain);
 }
 /**
  * Mask phone number for display
@@ -73,10 +73,10 @@ function maskPhone(phone) {
     if (!phone.startsWith('+91') || phone.length !== 13) {
         return phone; // Return as-is if not Indian mobile
     }
-    const countryCode = phone.substring(0, 3); // +91
-    const start = phone.substring(3, 6); // First 3 digits
-    const end = phone.substring(11); // Last 2 digits
-    return `${countryCode}${start}XXXXX${end}`;
+    var countryCode = phone.substring(0, 3); // +91
+    var start = phone.substring(3, 6); // First 3 digits
+    var end = phone.substring(11); // Last 2 digits
+    return "".concat(countryCode).concat(start, "XXXXX").concat(end);
 }
 /**
  * Generic hash function for identifiers
@@ -87,8 +87,8 @@ function maskPhone(phone) {
  * @returns Hash string with prefix
  */
 function hashIdentifier(value, type) {
-    const hash = (0, crypto_1.createHash)('sha256').update(value).digest('hex');
-    return `h:sha256:${hash}`;
+    var hash = (0, crypto_1.createHash)('sha256').update(value).digest('hex');
+    return "h:sha256:".concat(hash);
 }
 /**
  * Create a short hash for donor ID generation
@@ -98,7 +98,7 @@ function hashIdentifier(value, type) {
  * @returns Short hash (12 chars)
  */
 function shortHash(value) {
-    const hash = (0, crypto_1.createHash)('sha256').update(value).digest('hex');
+    var hash = (0, crypto_1.createHash)('sha256').update(value).digest('hex');
     return hash.substring(0, 12);
 }
 /**
@@ -111,7 +111,7 @@ function shortHash(value) {
 function sanitizeForLogs(data) {
     if (typeof data === 'string') {
         // Mask PAN patterns: ABCDE1234F
-        let sanitized = data.replace(/\b[A-Z]{5}\d{4}[A-Z]\b/g, 'XXXXX****X');
+        var sanitized = data.replace(/\b[A-Z]{5}\d{4}[A-Z]\b/g, 'XXXXX****X');
         // Mask email patterns
         sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, 'x***@xxx.com');
         // Mask phone patterns: +91XXXXXXXXXX or 10 digit numbers
@@ -121,10 +121,11 @@ function sanitizeForLogs(data) {
     }
     if (typeof data === 'object' && data !== null) {
         if (Array.isArray(data)) {
-            return data.map(item => sanitizeForLogs(item));
+            return data.map(function (item) { return sanitizeForLogs(item); });
         }
-        const sanitized = {};
-        for (const [key, value] of Object.entries(data)) {
+        var sanitized = {};
+        for (var _i = 0, _a = Object.entries(data); _i < _a.length; _i++) {
+            var _b = _a[_i], key = _b[0], value = _b[1];
             // Mask specific fields
             if (key === 'pan' && typeof value === 'string') {
                 sanitized[key] = value.length === 10 ? maskPAN(value) : 'XXXXX****X';

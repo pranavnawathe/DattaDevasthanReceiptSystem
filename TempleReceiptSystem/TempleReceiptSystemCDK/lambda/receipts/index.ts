@@ -2,7 +2,7 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createDonation } from '../common/services/donation-service';
 import { createAndUploadReceipt, getReceiptDownloadUrl } from '../common/services/receipt-artifact';
 import { getDonationByReceiptNo } from '../common/db/queries';
-import { CreateReceiptRequest, ListReceiptsRequest, DonorSearchRequest } from '../common/types';
+import { CreateReceiptRequest, ListReceiptsRequest, DonorSearchRequest, ExportRequest } from '../common/types';
 import { sanitizeForLogs } from '../common/utils/crypto';
 import {
   listReceiptsByDate,
@@ -12,6 +12,7 @@ import {
   getReceiptByNumber,
   searchDonorByIdentifier,
 } from '../common/services/receipt-listing';
+import { generateExport } from '../common/services/export-service';
 
 // Organization ID (hardcoded for now, will come from auth context later)
 const ORG_ID = 'DATTA-SAKHARAPA';
@@ -213,6 +214,45 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         downloadUrl,
         expiresIn: 3600, // 1 hour
       });
+    }
+
+    // Export receipts to CSV/Excel (POST /receipts/export)
+    if (method === 'POST' && path === '/receipts/export') {
+      if (!event.body) {
+        return json(400, { success: false, error: 'Request body is required' });
+      }
+
+      const exportRequest: ExportRequest = JSON.parse(event.body);
+
+      console.log('Exporting receipts:', sanitizeForLogs(exportRequest));
+
+      // Validate required fields
+      if (!exportRequest.startDate || !exportRequest.endDate) {
+        return json(400, {
+          success: false,
+          error: 'startDate and endDate are required',
+        });
+      }
+
+      if (!exportRequest.format || !['csv', 'excel'].includes(exportRequest.format)) {
+        return json(400, {
+          success: false,
+          error: 'format must be either "csv" or "excel"',
+        });
+      }
+
+      // Generate export
+      const result = await generateExport(ORG_ID, {
+        format: exportRequest.format,
+        startDate: exportRequest.startDate,
+        endDate: exportRequest.endDate,
+        rangeId: exportRequest.rangeId,
+        includeVoided: exportRequest.includeVoided || false,
+      });
+
+      console.log(`✅ Export generated: ${result.fileName} (${result.recordCount} records)`);
+
+      return json(200, result);
     }
 
     // Route not found

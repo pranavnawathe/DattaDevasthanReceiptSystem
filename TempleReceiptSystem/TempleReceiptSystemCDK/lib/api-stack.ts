@@ -73,6 +73,7 @@ export class ApiStack extends cdk.Stack {
     httpApi.addRoutes({ path: '/receipts/search', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
     httpApi.addRoutes({ path: '/receipts/donor/{donorId}', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
     httpApi.addRoutes({ path: '/receipts/{receiptNo}/download', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
+    httpApi.addRoutes({ path: '/receipts/export', methods: [apigwv2.HttpMethod.POST], integration: receiptsIntegration });
 
     // Ranges routes
     const rangesIntegration = new integrations.HttpLambdaIntegration('RangesIntegration', rangesFn);

@@ -2,7 +2,7 @@
 
 ## Current Status
 
-**Version**: 1.2 (Phase 1 + Range System + Admin Home UI)
+**Version**: 1.3 (Phase 1 + Range System + Admin Home + Export)
 **Status**: ✅ **Production** - Live and operational
 **Last Updated**: October 30, 2025
 
@@ -63,12 +63,14 @@
 - [x] Conditional payment reference fields
 - [x] Loading states during submission
 - [x] Error handling and user feedback
-- [x] **Admin Home page** with active range selection (NEW - Oct 2025)
-- [x] **Range Selection Modal** with year filtering (NEW - Oct 2025)
-- [x] **Active Range Context** with localStorage persistence (NEW - Oct 2025)
-- [x] **Hash-based routing** (#home, #receipts, #ranges) (NEW - Oct 2025)
-- [x] **Route guards** preventing receipt entry without active range (NEW - Oct 2025)
-- [x] **Range health indicators** with low number warnings (NEW - Oct 2025)
+- [x] **Admin Home page** with active range selection (Oct 2025)
+- [x] **Range Selection Modal** with year filtering (Oct 2025)
+- [x] **Active Range Context** with localStorage persistence (Oct 2025)
+- [x] **Hash-based routing** (#home, #receipts, #ranges, #donors, #export) (Oct 2025)
+- [x] **Route guards** preventing receipt entry without active range (Oct 2025)
+- [x] **Range health indicators** with low number warnings (Oct 2025)
+- [x] **Donor Search page** with phone/PAN/email lookup (Oct 2025)
+- [x] **Export Data page** with CSV download for Tally (NEW - Oct 2025)
 
 #### ✅ Infrastructure & DevOps
 - [x] AWS CDK infrastructure as code (3 stacks)
@@ -355,6 +357,26 @@
 
 ## Change Log
 
+### Version 1.3.1 (October 30, 2025) - Export Fix
+- ✅ **Fixed year-long export issue** - Exports now support up to 1 year
+- ✅ **Automatic chunking** for large date ranges (breaks into 30-day chunks)
+- ✅ **Transparent pagination** - Users get single CSV regardless of date range
+- ✅ **Updated documentation** with chunking details
+
+### Version 1.3 (October 30, 2025) - Export Feature
+- ✅ **Export to Tally/Excel** - CSV export functionality for accounting integration
+- ✅ **Export Data page** with bilingual UI (Marathi + English)
+- ✅ **Date range selection** with quick presets (Today, This Month, Last Month, This Year)
+- ✅ **Range-based filtering** for exports (optional)
+- ✅ **Tally-compatible CSV format** with DD-MM-YYYY date format
+- ✅ **Export API endpoint** (POST /receipts/export)
+- ✅ **Automatic file download** with descriptive naming
+- ✅ **CSV escaping** for special characters (quotes, commas, newlines)
+- ✅ **Export validation** (max 1 year range, required fields, date format)
+- ✅ **Include/exclude voided receipts** option
+- ✅ **Export Quick Action** enabled in Admin Home
+- ✅ **Comprehensive export documentation** with examples
+
 ### Version 1.2 (October 30, 2025)
 - ✅ **Admin Home page** with active range selection UI
 - ✅ **Range Selection Modal** with year filtering (2024, 2025, 2026)
@@ -365,6 +387,7 @@
 - ✅ **Quick Actions panel** with bilingual navigation tiles (Marathi + English)
 - ✅ **Bilingual labels throughout** - पावती तयार करा, श्रेणी व्यवस्थापन, etc.
 - ✅ **Active range banner** on receipt entry page showing current range
+- ✅ **Donor Search page** with phone/PAN/email lookup
 - ✅ Fully responsive design for mobile and desktop
 
 ### Version 1.1 (October 29, 2025)

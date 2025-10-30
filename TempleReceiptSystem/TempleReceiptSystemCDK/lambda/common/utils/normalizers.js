@@ -28,24 +28,24 @@ function normalizePhone(phone) {
     if (!phone)
         return null;
     // Remove all non-digit characters
-    const digits = phone.replace(/\D/g, '');
+    var digits = phone.replace(/\D/g, '');
     // Handle different formats
-    let normalized;
+    var normalized;
     if (digits.length === 10) {
         // 10 digits: assume Indian mobile (add +91)
-        normalized = `+91${digits}`;
+        normalized = "+91".concat(digits);
     }
     else if (digits.length === 12 && digits.startsWith('91')) {
         // 12 digits starting with 91: add +
-        normalized = `+${digits}`;
+        normalized = "+".concat(digits);
     }
     else if (digits.length === 11 && digits.startsWith('0')) {
         // 11 digits starting with 0: replace 0 with +91
-        normalized = `+91${digits.slice(1)}`;
+        normalized = "+91".concat(digits.slice(1));
     }
     else if (digits.length === 13 && digits.startsWith('091')) {
         // 13 digits starting with 091: replace 091 with +91
-        normalized = `+91${digits.slice(3)}`;
+        normalized = "+91".concat(digits.slice(3));
     }
     else {
         // Invalid format
@@ -66,9 +66,9 @@ function normalizePhone(phone) {
 function normalizeEmail(email) {
     if (!email)
         return null;
-    const normalized = email.trim().toLowerCase();
+    var normalized = email.trim().toLowerCase();
     // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (emailRegex.test(normalized)) {
         return normalized;
     }
@@ -84,9 +84,9 @@ function normalizeEmail(email) {
 function normalizePAN(pan) {
     if (!pan)
         return null;
-    const normalized = pan.trim().toUpperCase();
+    var normalized = pan.trim().toUpperCase();
     // Validate PAN format: ABCDE1234F
-    const panRegex = /^[A-Z]{5}\d{4}[A-Z]$/;
+    var panRegex = /^[A-Z]{5}\d{4}[A-Z]$/;
     if (panRegex.test(normalized)) {
         return normalized;
     }
@@ -102,7 +102,7 @@ function normalizePAN(pan) {
 function normalizeDate(date) {
     if (!date)
         return null;
-    let dateObj;
+    var dateObj;
     if (typeof date === 'string') {
         dateObj = new Date(date);
     }
@@ -114,10 +114,10 @@ function normalizeDate(date) {
         return null;
     }
     // Format to yyyy-mm-dd (India timezone aware)
-    const year = dateObj.getFullYear();
-    const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-    const day = String(dateObj.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    var year = dateObj.getFullYear();
+    var month = String(dateObj.getMonth() + 1).padStart(2, '0');
+    var day = String(dateObj.getDate()).padStart(2, '0');
+    return "".concat(year, "-").concat(month, "-").concat(day);
 }
 /**
  * Get today's date in ISO format (yyyy-mm-dd) in India timezone
@@ -125,14 +125,14 @@ function normalizeDate(date) {
  * @returns Today's date as yyyy-mm-dd
  */
 function getTodayISO() {
-    const now = new Date();
+    var now = new Date();
     // Convert to India timezone (IST: UTC+5:30)
-    const istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
-    const istTime = new Date(now.getTime() + istOffset);
-    const year = istTime.getUTCFullYear();
-    const month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(istTime.getUTCDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
+    var istOffset = 5.5 * 60 * 60 * 1000; // 5 hours 30 minutes in ms
+    var istTime = new Date(now.getTime() + istOffset);
+    var year = istTime.getUTCFullYear();
+    var month = String(istTime.getUTCMonth() + 1).padStart(2, '0');
+    var day = String(istTime.getUTCDate()).padStart(2, '0');
+    return "".concat(year, "-").concat(month, "-").concat(day);
 }
 /**
  * Normalize organization ID to uppercase
@@ -155,7 +155,7 @@ function normalizeOrgId(orgId) {
 function normalizeName(name) {
     if (!name)
         return null;
-    const trimmed = name.trim();
+    var trimmed = name.trim();
     return trimmed.length > 0 ? trimmed : null;
 }
 /**
@@ -167,7 +167,7 @@ function normalizeName(name) {
 function normalizeAmount(amount) {
     if (amount === null || amount === undefined)
         return null;
-    const num = typeof amount === 'string' ? parseFloat(amount) : amount;
+    var num = typeof amount === 'string' ? parseFloat(amount) : amount;
     if (isNaN(num) || num < 0) {
         return null;
     }

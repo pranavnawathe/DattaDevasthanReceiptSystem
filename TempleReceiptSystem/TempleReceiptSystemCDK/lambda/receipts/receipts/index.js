@@ -6,6 +6,7 @@ const receipt_artifact_1 = require("../common/services/receipt-artifact");
 const queries_1 = require("../common/db/queries");
 const crypto_1 = require("../common/utils/crypto");
 const receipt_listing_1 = require("../common/services/receipt-listing");
+const export_service_1 = require("../common/services/export-service");
 // Organization ID (hardcoded for now, will come from auth context later)
 const ORG_ID = 'DATTA-SAKHARAPA';
 function json(statusCode, body) {
@@ -146,6 +147,37 @@ const handler = async (event) => {
                 downloadUrl,
                 expiresIn: 3600, // 1 hour
             });
+        }
+        // Export receipts to CSV/Excel (POST /receipts/export)
+        if (method === 'POST' && path === '/receipts/export') {
+            if (!event.body) {
+                return json(400, { success: false, error: 'Request body is required' });
+            }
+            const exportRequest = JSON.parse(event.body);
+            console.log('Exporting receipts:', (0, crypto_1.sanitizeForLogs)(exportRequest));
+            // Validate required fields
+            if (!exportRequest.startDate || !exportRequest.endDate) {
+                return json(400, {
+                    success: false,
+                    error: 'startDate and endDate are required',
+                });
+            }
+            if (!exportRequest.format || !['csv', 'excel'].includes(exportRequest.format)) {
+                return json(400, {
+                    success: false,
+                    error: 'format must be either "csv" or "excel"',
+                });
+            }
+            // Generate export
+            const result = await (0, export_service_1.generateExport)(ORG_ID, {
+                format: exportRequest.format,
+                startDate: exportRequest.startDate,
+                endDate: exportRequest.endDate,
+                rangeId: exportRequest.rangeId,
+                includeVoided: exportRequest.includeVoided || false,
+            });
+            console.log(`✅ Export generated: ${result.fileName} (${result.recordCount} records)`);
+            return json(200, result);
         }
         // Route not found
         return json(404, { success: false, error: 'Not found' });

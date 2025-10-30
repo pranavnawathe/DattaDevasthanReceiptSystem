@@ -302,6 +302,32 @@ export interface DonorResolution {
 }
 
 /**
+ * Export request parameters
+ */
+export interface ExportRequest {
+  format: 'csv' | 'excel';          // Export format
+  startDate: string;                // Start date (yyyy-mm-dd)
+  endDate: string;                  // End date (yyyy-mm-dd)
+  rangeId?: string;                 // Optional: filter by range
+  includeVoided?: boolean;          // Include voided receipts (default: false)
+}
+
+/**
+ * Export response
+ */
+export interface ExportResponse {
+  success: boolean;
+  format: 'csv' | 'excel';
+  fileName: string;
+  content: string;                  // CSV content or base64 for Excel
+  recordCount: number;
+  dateRange: {
+    start: string;
+    end: string;
+  };
+}
+
+/**
  * Error response
  */
 export interface ErrorResponse {

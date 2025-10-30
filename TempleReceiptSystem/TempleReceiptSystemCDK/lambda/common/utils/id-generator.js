@@ -8,9 +8,9 @@ exports.generateDonorId = generateDonorId;
 exports.generateReceiptNo = generateReceiptNo;
 exports.parseReceiptNo = parseReceiptNo;
 exports.generateCorrelationId = generateCorrelationId;
-const crypto_1 = require("crypto");
-const crypto_2 = require("./crypto");
-const normalizers_1 = require("./normalizers");
+var crypto_1 = require("crypto");
+var crypto_2 = require("./crypto");
+var normalizers_1 = require("./normalizers");
 /**
  * Generate a stable donor ID based on available identifiers
  * Priority: PAN > Phone > Email > UUID
@@ -26,27 +26,27 @@ const normalizers_1 = require("./normalizers");
  */
 function generateDonorId(pan, phone, email, orgId) {
     // Normalize all inputs
-    const normalizedPAN = (0, normalizers_1.normalizePAN)(pan);
-    const normalizedPhone = (0, normalizers_1.normalizePhone)(phone);
-    const normalizedEmail = (0, normalizers_1.normalizeEmail)(email);
+    var normalizedPAN = (0, normalizers_1.normalizePAN)(pan);
+    var normalizedPhone = (0, normalizers_1.normalizePhone)(phone);
+    var normalizedEmail = (0, normalizers_1.normalizeEmail)(email);
     // Priority: PAN (most stable) > Phone > Email
-    let seed;
+    var seed;
     if (normalizedPAN) {
-        seed = `${orgId}:PAN:${normalizedPAN}`;
+        seed = "".concat(orgId, ":PAN:").concat(normalizedPAN);
     }
     else if (normalizedPhone) {
-        seed = `${orgId}:PHONE:${normalizedPhone}`;
+        seed = "".concat(orgId, ":PHONE:").concat(normalizedPhone);
     }
     else if (normalizedEmail) {
-        seed = `${orgId}:EMAIL:${normalizedEmail}`;
+        seed = "".concat(orgId, ":EMAIL:").concat(normalizedEmail);
     }
     else {
         // No stable identifier - use UUID
-        return `D_${(0, crypto_1.randomUUID)().replace(/-/g, '').substring(0, 12)}`;
+        return "D_".concat((0, crypto_1.randomUUID)().replace(/-/g, '').substring(0, 12));
     }
     // Generate hash-based ID
-    const hash = (0, crypto_2.shortHash)(seed);
-    return `D_${hash}`;
+    var hash = (0, crypto_2.shortHash)(seed);
+    return "D_".concat(hash);
 }
 /**
  * Generate receipt number in format: YYYY-NNNNN
@@ -57,8 +57,8 @@ function generateDonorId(pan, phone, email, orgId) {
  * @returns Formatted receipt number
  */
 function generateReceiptNo(year, sequence) {
-    const paddedSeq = String(sequence).padStart(5, '0');
-    return `${year}-${paddedSeq}`;
+    var paddedSeq = String(sequence).padStart(5, '0');
+    return "".concat(year, "-").concat(paddedSeq);
 }
 /**
  * Parse receipt number to extract year and sequence
@@ -68,7 +68,7 @@ function generateReceiptNo(year, sequence) {
  * @returns Object with year and sequence, or null if invalid
  */
 function parseReceiptNo(receiptNo) {
-    const match = receiptNo.match(/^(\d{4})-(\d{5})$/);
+    var match = receiptNo.match(/^(\d{4})-(\d{5})$/);
     if (!match)
         return null;
     return {
@@ -83,5 +83,5 @@ function parseReceiptNo(receiptNo) {
  * @returns Random correlation ID
  */
 function generateCorrelationId() {
-    return `req_${Date.now()}_${(0, crypto_1.randomUUID)().substring(0, 8)}`;
+    return "req_".concat(Date.now(), "_").concat((0, crypto_1.randomUUID)().substring(0, 8));
 }

@@ -2,17 +2,6 @@ import { useState } from 'react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://lfg5incxn1.execute-api.ap-south-1.amazonaws.com';
 
-interface DonorInfo {
-  donorId: string;
-  name: string;
-  mobile?: string;
-  pan?: string;
-  email?: string;
-  lifetimeTotal?: number;
-  lastDonationDate?: string;
-  donationCount?: number;
-}
-
 interface Receipt {
   receiptNo: string;
   date: string;
@@ -28,9 +17,22 @@ interface Receipt {
 
 interface SearchResult {
   success: boolean;
-  donor: DonorInfo;
-  receipts: Receipt[];
-  count: number;
+  found: boolean;
+  donor: {
+    donorId: string;
+    primary: {
+      name: string;
+      mobile?: string;
+      pan?: string;
+      email?: string;
+    };
+    stats?: {
+      lifetimeTotal?: number;
+      lastDonationDate?: string;
+      count?: number;
+    };
+  };
+  recentReceipts: Receipt[];
 }
 
 export function DonorSearch() {
@@ -187,7 +189,7 @@ export function DonorSearch() {
         )}
 
         {/* Search Results */}
-        {result && result.donor && (
+        {result && result.found && result.donor && (
           <div className="space-y-6">
             {/* Donor Info Card */}
             <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
@@ -196,48 +198,48 @@ export function DonorSearch() {
                   <h2 className="text-xl font-bold text-gray-900 marathi">दाता माहिती / Donor Information</h2>
                 </div>
                 <span className="px-3 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 border border-green-300">
-                  {result.donor.donationCount || 0} Receipts
+                  {result.donor.stats?.count || 0} Receipts
                 </span>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-xs text-gray-500 mb-1 marathi">नाव / Name</p>
-                  <p className="text-base font-semibold text-gray-900">{result.donor.name}</p>
+                  <p className="text-base font-semibold text-gray-900">{result.donor.primary.name}</p>
                 </div>
 
-                {result.donor.mobile && (
+                {result.donor.primary.mobile && (
                   <div>
                     <p className="text-xs text-gray-500 mb-1 marathi">मोबाइल / Mobile</p>
-                    <p className="text-base font-semibold text-gray-900">{result.donor.mobile}</p>
+                    <p className="text-base font-semibold text-gray-900">{result.donor.primary.mobile}</p>
                   </div>
                 )}
 
-                {result.donor.pan && (
+                {result.donor.primary.pan && (
                   <div>
                     <p className="text-xs text-gray-500 mb-1">PAN</p>
-                    <p className="text-base font-mono font-semibold text-gray-900">{result.donor.pan}</p>
+                    <p className="text-base font-mono font-semibold text-gray-900">{result.donor.primary.pan}</p>
                   </div>
                 )}
 
-                {result.donor.email && (
+                {result.donor.primary.email && (
                   <div>
                     <p className="text-xs text-gray-500 mb-1 marathi">ईमेल / Email</p>
-                    <p className="text-base font-semibold text-gray-900">{result.donor.email}</p>
+                    <p className="text-base font-semibold text-gray-900">{result.donor.primary.email}</p>
                   </div>
                 )}
 
-                {result.donor.lifetimeTotal !== undefined && (
+                {result.donor.stats?.lifetimeTotal !== undefined && (
                   <div>
                     <p className="text-xs text-gray-500 mb-1 marathi">एकूण देणगी / Lifetime Total</p>
-                    <p className="text-lg font-bold text-blue-600">{formatAmount(result.donor.lifetimeTotal)}</p>
+                    <p className="text-lg font-bold text-blue-600">{formatAmount(result.donor.stats.lifetimeTotal)}</p>
                   </div>
                 )}
 
-                {result.donor.lastDonationDate && (
+                {result.donor.stats?.lastDonationDate && (
                   <div>
                     <p className="text-xs text-gray-500 mb-1 marathi">शेवटची देणगी / Last Donation</p>
-                    <p className="text-base font-semibold text-gray-900">{formatDate(result.donor.lastDonationDate)}</p>
+                    <p className="text-base font-semibold text-gray-900">{formatDate(result.donor.stats.lastDonationDate)}</p>
                   </div>
                 )}
               </div>
@@ -248,13 +250,13 @@ export function DonorSearch() {
               <div className="px-6 py-4 border-b border-gray-200">
                 <h2 className="text-lg font-bold text-gray-900 marathi">पावती इतिहास / Receipt History</h2>
                 <p className="text-sm text-gray-500 mt-1">
-                  {result.count} {result.count === 1 ? 'receipt' : 'receipts'} found
+                  {result.recentReceipts?.length || 0} {result.recentReceipts?.length === 1 ? 'receipt' : 'receipts'} found
                 </p>
               </div>
 
               <div className="divide-y divide-gray-200">
-                {result.receipts && result.receipts.length > 0 ? (
-                  result.receipts.map((receipt) => (
+                {result.recentReceipts && result.recentReceipts.length > 0 ? (
+                  result.recentReceipts.map((receipt) => (
                     <div key={receipt.receiptNo} className="p-6 hover:bg-gray-50 transition-colors">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">

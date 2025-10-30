@@ -5,9 +5,10 @@ import { DonationForm } from './components/DonationForm';
 import { ReceiptDisplay } from './components/ReceiptDisplay';
 import { RangeManagement } from './components/RangeManagement';
 import { AdminHome } from './pages/AdminHome';
+import { DonorSearch } from './pages/DonorSearch';
 import { useActiveRange } from './contexts/ActiveRangeContext';
 
-type Route = 'home' | 'receipts' | 'ranges';
+type Route = 'home' | 'receipts' | 'ranges' | 'donors';
 
 function App() {
   const [currentRoute, setCurrentRoute] = useState<Route>('home');
@@ -22,6 +23,8 @@ function App() {
         setCurrentRoute('ranges');
       } else if (hash === 'receipts' || hash === 'issue') {
         setCurrentRoute('receipts');
+      } else if (hash === 'donors') {
+        setCurrentRoute('donors');
       } else {
         setCurrentRoute('home');
       }
@@ -65,6 +68,11 @@ function App() {
   // Render home page
   if (currentRoute === 'home') {
     return <AdminHome />;
+  }
+
+  // Render donor search page
+  if (currentRoute === 'donors') {
+    return <DonorSearch />;
   }
 
   // Render other routes (receipts or ranges)

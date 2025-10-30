@@ -230,23 +230,21 @@ export function AdminHome() {
 
             {/* Donor Search */}
             <button
-              disabled
-              className="p-6 bg-gray-50 border-2 border-gray-200 rounded-lg text-left cursor-not-allowed opacity-60"
-              title="लवकरच येत आहे"
+              onClick={() => window.location.hash = '#donors'}
+              className="p-6 bg-white border-2 border-green-200 rounded-lg hover:border-green-400 hover:shadow-md text-left transition-all"
             >
               <div className="flex items-center mb-3">
                 <div className="flex-shrink-0">
-                  <svg className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="h-8 w-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
                 <div className="ml-3">
-                  <h3 className="text-lg font-semibold text-gray-400 marathi">दात्यांचा शोध</h3>
-                  <p className="text-xs text-gray-500">Donor Search</p>
+                  <h3 className="text-lg font-semibold text-gray-900 marathi">दात्यांचा शोध</h3>
+                  <p className="text-xs text-gray-600">Donor Search</p>
                 </div>
               </div>
-              <p className="text-sm text-gray-500 marathi">दाते शोधा आणि इतिहास पहा</p>
-              <p className="mt-2 text-xs text-gray-400 marathi">लवकरच येत आहे</p>
+              <p className="text-sm text-gray-600 marathi">दाते शोधा आणि इतिहास पहा</p>
             </button>
 
             {/* Donation Export */}

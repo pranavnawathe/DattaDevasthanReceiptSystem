@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useActiveRange } from '../contexts/ActiveRangeContext';
 import { RangeSelectionModal } from '../components/RangeSelectionModal';
+import { TempleHeader } from '../components/TempleHeader';
 
 export function AdminHome() {
   const { activeRange, loading, error, refreshActiveRange } = useActiveRange();
@@ -47,25 +48,10 @@ export function AdminHome() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-xl font-semibold text-gray-900 marathi">श्री दत्त देवस्थान</h1>
-              <p className="text-sm text-gray-500">Datta Devasthan, Sakharpa</p>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="text-sm font-medium text-gray-700">Branch: Main</p>
-                <p className="text-xs text-gray-500">User: Admin</p>
-              </div>
-              <span className="px-3 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 border border-blue-300">
-                ADMIN
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
+      <TempleHeader
+        title="प्रशासक मुखपृष्ठ / Admin Home"
+        subtitle="Receipt Management System"
+      />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Error Alert */}

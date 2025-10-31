@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { TempleHeader } from '../components/TempleHeader';
 
 const API_URL = import.meta.env.VITE_API_URL || 'https://lfg5incxn1.execute-api.ap-south-1.amazonaws.com';
 
@@ -102,22 +103,20 @@ export function DonorSearch() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900 marathi">दात्यांचा शोध</h1>
-              <p className="text-sm text-gray-600">Donor Search</p>
-            </div>
-            <button
-              onClick={() => window.location.hash = ''}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              ← Home
-            </button>
-          </div>
-        </div>
-      </header>
+      <TempleHeader
+        title="दात्यांचा शोध / Donor Search"
+        subtitle="Search donors by phone, PAN, or email"
+      />
+
+      {/* Back to Home Button */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <button
+          onClick={() => window.location.hash = ''}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shadow-sm"
+        >
+          ← मुखपृष्ठ / Home
+        </button>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Search Form */}

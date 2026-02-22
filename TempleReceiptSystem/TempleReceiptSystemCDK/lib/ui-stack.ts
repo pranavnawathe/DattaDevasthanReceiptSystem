@@ -3,13 +3,18 @@ import { Construct } from 'constructs';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as s3deploy from 'aws-cdk-lib/aws-s3-deployment';
 
+export interface UiStackProps extends cdk.StackProps {
+  stageName: 'test' | 'prod';
+}
+
 export class UiStack extends cdk.Stack {
-  constructor(scope: Construct, id: string, props?: cdk.StackProps) {
+  constructor(scope: Construct, id: string, props: UiStackProps) {
     super(scope, id, props);
+    const isTest = props.stageName === 'test';
 
     // S3 bucket for hosting the UI
     const uiBucket = new s3.Bucket(this, 'UiBucket', {
-      bucketName: 'datta-devasthan-receipts',
+      bucketName: isTest ? 'datta-devasthan-receipts-test' : 'datta-devasthan-receipts',
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html', // SPA routing fallback
       publicReadAccess: true,

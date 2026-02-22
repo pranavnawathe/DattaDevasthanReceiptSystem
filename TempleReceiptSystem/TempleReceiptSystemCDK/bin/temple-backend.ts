@@ -10,7 +10,8 @@ const env = {
 }
 
 const foundationStack = new FoundationStack(app, 'FoundationStack', {
-  env: { ...env }
+  env: { ...env },
+  stageName: 'prod',
 });
 
 new ApiStack(app, 'TempleApiStack', {
@@ -22,4 +23,5 @@ new ApiStack(app, 'TempleApiStack', {
 
 new UiStack(app, 'TempleUiStack', {
   env,
+  stageName: 'prod',
 });

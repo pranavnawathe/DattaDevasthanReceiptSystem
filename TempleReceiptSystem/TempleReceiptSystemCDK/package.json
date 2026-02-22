@@ -10,7 +10,8 @@
     "deploy": "cdk deploy",
     "diff": "cdk diff",
     "test": "echo 'No tests yet'",
-    "install:lambda": "cd lambda/receipts && npm install"
+    "install:lambda": "cd lambda/receipts && npm install",
+    "deploy:pipeline": "cdk deploy TempleReceiptPipelineStack --app 'npx ts-node --prefer-ts-exts bin/pipeline.ts' --require-approval never"
   },
   "author": "",
   "license": "MIT",

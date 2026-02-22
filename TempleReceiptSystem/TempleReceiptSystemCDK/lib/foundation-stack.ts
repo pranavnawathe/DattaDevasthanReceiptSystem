@@ -3,13 +3,18 @@ import { Construct } from 'constructs';
 import { AttributeType, BillingMode, Table, ProjectionType, TableEncryption } from 'aws-cdk-lib/aws-dynamodb';
 import { Bucket, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
 
+export interface FoundationStackProps extends StackProps {
+  stageName: 'test' | 'prod';
+}
+
 export class FoundationStack extends Stack {
   public readonly donationsTable: Table;
   public readonly receiptsBucket: Bucket;
   public readonly exportsBucket: Bucket;
 
-  constructor(scope: Construct, id: string, props?: StackProps) {
+  constructor(scope: Construct, id: string, props: FoundationStackProps) {
     super(scope, id, props);
+    const isTest = props.stageName === 'test';
 
     // DynamoDB Table
     // Single table design supporting multiple entity types:
@@ -23,10 +28,10 @@ export class FoundationStack extends Stack {
       sortKey: { name: 'SK', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       pointInTimeRecoverySpecification: {
-        pointInTimeRecoveryEnabled: true,
+        pointInTimeRecoveryEnabled: !isTest,
       },
       encryption: TableEncryption.AWS_MANAGED,
-      removalPolicy: RemovalPolicy.RETAIN, // Retain data on stack deletion
+      removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
     });
 
     // GSI1: donor lookups (DONOR#<donorId> → DATE#<date>#RCPT#<receiptNo>)
@@ -48,11 +53,13 @@ export class FoundationStack extends Stack {
     // S3 Buckets
     this.receiptsBucket = new Bucket(this, 'ReceiptsBucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.RETAIN,
+      removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+      autoDeleteObjects: isTest,
     });
     this.exportsBucket = new Bucket(this, 'ExportsBucket', {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
-      removalPolicy: RemovalPolicy.RETAIN, 
+      removalPolicy: isTest ? RemovalPolicy.DESTROY : RemovalPolicy.RETAIN,
+      autoDeleteObjects: isTest,
     });
   }
 }

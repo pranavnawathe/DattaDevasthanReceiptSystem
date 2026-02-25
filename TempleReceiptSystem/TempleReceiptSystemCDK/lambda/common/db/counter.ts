@@ -30,7 +30,8 @@ export async function getNextReceiptNumber(orgId: string, year: number): Promise
       PK: Keys.PK.org(orgId),
       SK: Keys.SK.counter(year),
     },
-    UpdateExpression: 'SET currentSeq = if_not_exists(currentSeq, :zero) + :inc, updatedAt = :now, #year = if_not_exists(#year, :year)',
+    UpdateExpression:
+      'SET currentSeq = if_not_exists(currentSeq, :zero) + :inc, updatedAt = :now, #year = if_not_exists(#year, :year)',
     ExpressionAttributeNames: {
       '#year': 'year',
     },
@@ -91,7 +92,7 @@ export async function getCurrentCounter(orgId: string, year: number): Promise<nu
 export async function resetCounter(
   orgId: string,
   year: number,
-  newValue: number = 0
+  newValue: number = 0,
 ): Promise<void> {
   const { PutCommand } = await import('@aws-sdk/lib-dynamodb');
 

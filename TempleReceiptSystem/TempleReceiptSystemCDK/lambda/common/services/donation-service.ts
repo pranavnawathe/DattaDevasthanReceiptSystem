@@ -6,8 +6,22 @@ import { PutCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, getTableName } from '../db/dynamo-client';
 import { allocateFromRange, RangeAllocationError } from './range-allocator';
 import { resolveDonor, validateDonorInfo } from './donor-resolver';
-import { CreateReceiptRequest, CreateReceiptResponse, DonationItem, DonorItem, AliasItem, Keys } from '../types';
-import { normalizePhone, normalizeEmail, normalizePAN, normalizeDate, getTodayISO, normalizeAmount } from '../utils/normalizers';
+import {
+  CreateReceiptRequest,
+  CreateReceiptResponse,
+  DonationItem,
+  DonorItem,
+  AliasItem,
+  Keys,
+} from '../types';
+import {
+  normalizePhone,
+  normalizeEmail,
+  normalizePAN,
+  normalizeDate,
+  getTodayISO,
+  normalizeAmount,
+} from '../utils/normalizers';
 import { hashPAN, hashEmail, maskPAN } from '../utils/crypto';
 
 /**
@@ -26,7 +40,7 @@ import { hashPAN, hashEmail, maskPAN } from '../utils/crypto';
  */
 export async function createDonation(
   orgId: string,
-  request: CreateReceiptRequest
+  request: CreateReceiptRequest,
 ): Promise<CreateReceiptResponse> {
   const startTime = Date.now();
 
@@ -66,7 +80,12 @@ export async function createDonation(
   // 7. Allocate receipt number from active range
   let allocation;
   try {
-    allocation = await allocateFromRange(orgId, currentYear, donationDate, request.flexibleMode || false);
+    allocation = await allocateFromRange(
+      orgId,
+      currentYear,
+      donationDate,
+      request.flexibleMode || false,
+    );
   } catch (error) {
     if (error instanceof RangeAllocationError) {
       throw new Error(`Receipt allocation failed: ${error.message} (${error.code})`);
@@ -77,7 +96,9 @@ export async function createDonation(
   const receiptNo = allocation.receiptNo;
   const rangeId = allocation.rangeId;
 
-  console.log(`Creating donation: ${receiptNo} from range ${rangeId} for donor: ${donorId} (isNew: ${isNew})`);
+  console.log(
+    `Creating donation: ${receiptNo} from range ${rangeId} for donor: ${donorId} (isNew: ${isNew})`,
+  );
 
   // 7. Build donation item
   const donationItem: DonationItem = {
@@ -188,7 +209,7 @@ export async function createDonation(
         },
       },
       // Add alias items for new donors
-      ...aliasItems.map(alias => ({
+      ...aliasItems.map((alias) => ({
         Put: {
           TableName: getTableName(),
           Item: alias,
@@ -200,7 +221,7 @@ export async function createDonation(
     await docClient.send(
       new TransactWriteCommand({
         TransactItems: transactItems,
-      })
+      }),
     );
 
     console.log(`✅ Donation created successfully: ${receiptNo}`);

@@ -23,7 +23,7 @@ export async function listReceiptsByDate(
   orgId: string,
   date: string,
   params?: PaginationParams,
-  includeVoided: boolean = false
+  includeVoided: boolean = false,
 ): Promise<PaginatedResponse<DonationItem>> {
   const limit = Math.min(params?.limit || 50, 100);
 
@@ -40,7 +40,7 @@ export async function listReceiptsByDate(
 
   if (params?.lastEvaluatedKey) {
     queryParams.ExclusiveStartKey = JSON.parse(
-      Buffer.from(params.lastEvaluatedKey, 'base64').toString()
+      Buffer.from(params.lastEvaluatedKey, 'base64').toString(),
     );
   }
 
@@ -79,7 +79,7 @@ export async function listReceiptsByDateRange(
   startDate: string,
   endDate: string,
   params?: PaginationParams,
-  includeVoided: boolean = false
+  includeVoided: boolean = false,
 ): Promise<PaginatedResponse<DonationItem>> {
   const limit = Math.min(params?.limit || 50, 100);
 
@@ -152,7 +152,7 @@ export async function listReceiptsByDonor(
   orgId: string,
   donorId: string,
   params?: PaginationParams,
-  includeVoided: boolean = false
+  includeVoided: boolean = false,
 ): Promise<PaginatedResponse<DonationItem>> {
   const limit = Math.min(params?.limit || 50, 100);
 
@@ -169,7 +169,7 @@ export async function listReceiptsByDonor(
 
   if (params?.lastEvaluatedKey) {
     queryParams.ExclusiveStartKey = JSON.parse(
-      Buffer.from(params.lastEvaluatedKey, 'base64').toString()
+      Buffer.from(params.lastEvaluatedKey, 'base64').toString(),
     );
   }
 
@@ -206,7 +206,7 @@ export async function listReceiptsByRange(
   orgId: string,
   rangeId: string,
   params?: PaginationParams,
-  includeVoided: boolean = false
+  includeVoided: boolean = false,
 ): Promise<PaginatedResponse<DonationItem>> {
   const limit = Math.min(params?.limit || 50, 100);
 
@@ -222,7 +222,7 @@ export async function listReceiptsByRange(
 
   if (params?.lastEvaluatedKey) {
     queryParams.ExclusiveStartKey = JSON.parse(
-      Buffer.from(params.lastEvaluatedKey, 'base64').toString()
+      Buffer.from(params.lastEvaluatedKey, 'base64').toString(),
     );
   }
 
@@ -256,7 +256,7 @@ export async function listReceiptsByRange(
  */
 export async function getReceiptByNumber(
   orgId: string,
-  receiptNo: string
+  receiptNo: string,
 ): Promise<DonationItem | null> {
   const params = {
     TableName: getTableName(),
@@ -282,7 +282,7 @@ export async function getReceiptByNumber(
 export async function searchDonorByIdentifier(
   orgId: string,
   identifier: string,
-  type?: 'phone' | 'pan' | 'email'
+  type?: 'phone' | 'pan' | 'email',
 ): Promise<DonorItem | null> {
   let sk: string;
 

@@ -17,10 +17,10 @@ export type ExportFormat = 'csv' | 'excel';
  */
 export interface ExportOptions {
   format: ExportFormat;
-  startDate: string;          // yyyy-mm-dd
-  endDate: string;            // yyyy-mm-dd
-  rangeId?: string;           // Optional: filter by range
-  includeVoided?: boolean;    // Include voided receipts (default: false)
+  startDate: string; // yyyy-mm-dd
+  endDate: string; // yyyy-mm-dd
+  rangeId?: string; // Optional: filter by range
+  includeVoided?: boolean; // Include voided receipts (default: false)
 }
 
 /**
@@ -30,7 +30,7 @@ export interface ExportResult {
   success: boolean;
   format: ExportFormat;
   fileName: string;
-  content: string;            // CSV content or base64 for Excel
+  content: string; // CSV content or base64 for Excel
   recordCount: number;
   dateRange: {
     start: string;
@@ -43,26 +43,23 @@ export interface ExportResult {
  * Based on standard Tally voucher import format
  */
 const TALLY_CSV_HEADERS = [
-  'Date',                     // Receipt date (DD-MM-YYYY format for Tally)
-  'Receipt No',               // Receipt number (2025-00001)
-  'Donor Name',               // Donor name
-  'Mobile',                   // Donor mobile
-  'PAN',                      // Donor PAN (optional)
-  'Amount',                   // Total amount
-  'Payment Mode',             // CASH, UPI, CHEQUE, etc.
-  'Payment Ref',              // UPI ID, Cheque No, etc.
-  'Purpose Breakup',          // JSON string of breakup
-  'Eligible 80G',             // Yes/No
-  'Narration',                // Auto-generated description
+  'Date', // Receipt date (DD-MM-YYYY format for Tally)
+  'Receipt No', // Receipt number (2025-00001)
+  'Donor Name', // Donor name
+  'Mobile', // Donor mobile
+  'PAN', // Donor PAN (optional)
+  'Amount', // Total amount
+  'Payment Mode', // CASH, UPI, CHEQUE, etc.
+  'Payment Ref', // UPI ID, Cheque No, etc.
+  'Purpose Breakup', // JSON string of breakup
+  'Eligible 80G', // Yes/No
+  'Narration', // Auto-generated description
 ];
 
 /**
  * Generate export for given date range
  */
-export async function generateExport(
-  orgId: string,
-  options: ExportOptions
-): Promise<ExportResult> {
+export async function generateExport(orgId: string, options: ExportOptions): Promise<ExportResult> {
   // Validate dates
   validateDateRange(options.startDate, options.endDate);
 
@@ -83,7 +80,7 @@ export async function generateExport(
         options.startDate,
         options.endDate,
         { limit: 100, lastEvaluatedKey: nextToken },
-        options.includeVoided || false
+        options.includeVoided || false,
       );
       receipts.push(...result.items);
       nextToken = result.nextToken;
@@ -106,7 +103,7 @@ export async function generateExport(
           chunkStartDate,
           chunkEndDate,
           { limit: 100, lastEvaluatedKey: nextToken },
-          options.includeVoided || false
+          options.includeVoided || false,
         );
         receipts.push(...result.items);
         nextToken = result.nextToken;
@@ -155,17 +152,17 @@ function generateCSV(receipts: DonationItem[]): string {
   // Add data rows
   for (const receipt of receipts) {
     const row = [
-      formatDateForTally(receipt.date),                                      // Date (DD-MM-YYYY)
-      receipt.receiptNo,                                                     // Receipt No
-      receipt.donor.name,                                                    // Donor Name
-      receipt.donor.mobile || '',                                            // Mobile
-      receipt.donor.pan || '',                                               // PAN
-      receipt.total.toFixed(2),                                              // Amount
-      receipt.payment.mode,                                                  // Payment Mode
-      receipt.payment.ref || '',                                             // Payment Ref
-      JSON.stringify(receipt.breakup),                                       // Purpose Breakup (JSON)
-      receipt.eligible80G ? 'Yes' : 'No',                                    // Eligible 80G
-      generateNarration(receipt),                                            // Narration
+      formatDateForTally(receipt.date), // Date (DD-MM-YYYY)
+      receipt.receiptNo, // Receipt No
+      receipt.donor.name, // Donor Name
+      receipt.donor.mobile || '', // Mobile
+      receipt.donor.pan || '', // PAN
+      receipt.total.toFixed(2), // Amount
+      receipt.payment.mode, // Payment Mode
+      receipt.payment.ref || '', // Payment Ref
+      JSON.stringify(receipt.breakup), // Purpose Breakup (JSON)
+      receipt.eligible80G ? 'Yes' : 'No', // Eligible 80G
+      generateNarration(receipt), // Narration
     ];
 
     rows.push(row.map(escapeCSVField).join(','));
@@ -210,9 +207,7 @@ function escapeCSVField(field: string): string {
 function generateFileName(options: ExportOptions, extension: string): string {
   const { startDate, endDate, rangeId } = options;
 
-  const dateStr = startDate === endDate
-    ? startDate
-    : `${startDate}_to_${endDate}`;
+  const dateStr = startDate === endDate ? startDate : `${startDate}_to_${endDate}`;
 
   const rangeStr = rangeId ? `_${rangeId}` : '';
 

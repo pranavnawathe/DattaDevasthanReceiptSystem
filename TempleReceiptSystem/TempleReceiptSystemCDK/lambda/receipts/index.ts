@@ -2,7 +2,12 @@ import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { createDonation } from '../common/services/donation-service';
 import { createAndUploadReceipt, getReceiptDownloadUrl } from '../common/services/receipt-artifact';
 import { getDonationByReceiptNo } from '../common/db/queries';
-import { CreateReceiptRequest, ListReceiptsRequest, DonorSearchRequest, ExportRequest } from '../common/types';
+import {
+  CreateReceiptRequest,
+  ListReceiptsRequest,
+  DonorSearchRequest,
+  ExportRequest,
+} from '../common/types';
 import { sanitizeForLogs } from '../common/utils/crypto';
 import {
   listReceiptsByDate,
@@ -125,7 +130,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
           startDate,
           endDate,
           pagination,
-          includeVoidedFlag
+          includeVoidedFlag,
         );
         return json(200, { success: true, ...result });
       }
@@ -151,7 +156,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       const donorItem = await searchDonorByIdentifier(
         ORG_ID,
         donor,
-        type as 'phone' | 'pan' | 'email' | undefined
+        type as 'phone' | 'pan' | 'email' | undefined,
       );
 
       if (!donorItem) {

@@ -1,6 +1,12 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyResultV2 } from 'aws-lambda';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
-import { DynamoDBDocumentClient, GetCommand, PutCommand, UpdateCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  UpdateCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
 import { RangeItem, RangeStatus, Keys } from '../common/types';
 import {
   validateRange,
@@ -40,7 +46,7 @@ function json(statusCode: number, body: unknown): APIGatewayProxyResultV2 {
  * GET /ranges?status=active&year=2025
  */
 async function listRanges(
-  queryParams: Record<string, string | undefined>
+  queryParams: Record<string, string | undefined>,
 ): Promise<APIGatewayProxyResultV2> {
   const { status, year } = queryParams;
 
@@ -130,7 +136,11 @@ async function getRange(rangeId: string): Promise<APIGatewayProxyResultV2> {
 /**
  * Check if a new range overlaps with any existing ranges for the same year
  */
-async function checkRangeOverlap(year: number, start: number, end: number): Promise<RangeItem | null> {
+async function checkRangeOverlap(
+  year: number,
+  start: number,
+  end: number,
+): Promise<RangeItem | null> {
   // Get all ranges for this year (excluding archived)
   const params = {
     TableName: TABLE_NAME,
@@ -145,9 +155,7 @@ async function checkRangeOverlap(year: number, start: number, end: number): Prom
   const ranges = (result.Items || []) as RangeItem[];
 
   // Filter to same year and non-archived
-  const yearRanges = ranges.filter(
-    (r) => r.year === year && r.status !== RangeStatus.ARCHIVED
-  );
+  const yearRanges = ranges.filter((r) => r.year === year && r.status !== RangeStatus.ARCHIVED);
 
   // Check for overlaps
   for (const existing of yearRanges) {
@@ -185,9 +193,7 @@ async function getActiveRange(year: number): Promise<RangeItem | null> {
   const ranges = (result.Items || []) as RangeItem[];
 
   // Find active range for this year
-  const activeRange = ranges.find(
-    (r) => r.year === year && r.status === RangeStatus.ACTIVE
-  );
+  const activeRange = ranges.find((r) => r.year === year && r.status === RangeStatus.ACTIVE);
 
   return activeRange || null;
 }
@@ -219,7 +225,7 @@ async function createRange(body: string): Promise<APIGatewayProxyResultV2> {
         PK: Keys.PK.org(ORG_ID),
         SK: Keys.SK.range(rangeId),
       },
-    })
+    }),
   );
 
   if (existingRange.Item) {
@@ -284,7 +290,7 @@ async function createRange(body: string): Promise<APIGatewayProxyResultV2> {
       TableName: TABLE_NAME,
       Item: newRange,
       ConditionExpression: 'attribute_not_exists(PK)',
-    })
+    }),
   );
 
   console.log(`✅ Range created: ${rangeId}`);
@@ -303,10 +309,7 @@ async function createRange(body: string): Promise<APIGatewayProxyResultV2> {
  * Update range status
  * PUT /ranges/{rangeId}/status
  */
-async function updateRangeStatus(
-  rangeId: string,
-  body: string
-): Promise<APIGatewayProxyResultV2> {
+async function updateRangeStatus(rangeId: string, body: string): Promise<APIGatewayProxyResultV2> {
   if (!validateRangeId(rangeId)) {
     return json(400, {
       success: false,
@@ -325,7 +328,7 @@ async function updateRangeStatus(
         PK: Keys.PK.org(ORG_ID),
         SK: Keys.SK.range(rangeId),
       },
-    })
+    }),
   );
 
   if (!result.Item) {

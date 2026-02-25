@@ -24,7 +24,7 @@ export function generateDonorId(
   pan: string | null | undefined,
   phone: string | null | undefined,
   email: string | null | undefined,
-  orgId: string
+  orgId: string,
 ): string {
   // Normalize all inputs
   const normalizedPAN = normalizePAN(pan);

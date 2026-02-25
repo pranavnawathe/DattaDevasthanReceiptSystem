@@ -109,7 +109,7 @@ export async function getDonorProfile(orgId: string, donorId: string): Promise<D
  */
 export async function getDonationByReceiptNo(
   orgId: string,
-  receiptNo: string
+  receiptNo: string,
 ): Promise<DonationItem | null> {
   const params = {
     TableName: getTableName(),
@@ -131,7 +131,7 @@ export async function getDonationByReceiptNo(
  */
 export async function getDonationsByDonor(
   donorId: string,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<DonationItem[]> {
   const params: QueryCommandInput = {
     TableName: getTableName(),
@@ -160,7 +160,7 @@ export async function getDonationsByDateRange(
   orgId: string,
   startDate: string,
   endDate: string,
-  limit: number = 100
+  limit: number = 100,
 ): Promise<DonationItem[]> {
   // For date range query, we need to query each date
   // This is a simplified version - in production, consider pagination

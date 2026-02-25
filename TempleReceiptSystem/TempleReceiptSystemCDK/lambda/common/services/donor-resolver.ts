@@ -18,10 +18,7 @@ import { getAliasByPhone, getAliasByPAN, getAliasByEmail, getDonorProfile } from
  * @param donorInfo - Donor information from request
  * @returns Donor resolution result with donorId and whether it's new
  */
-export async function resolveDonor(
-  orgId: string,
-  donorInfo: DonorInfo
-): Promise<DonorResolution> {
+export async function resolveDonor(orgId: string, donorInfo: DonorInfo): Promise<DonorResolution> {
   // Normalize all identifiers
   const normalizedPhone = normalizePhone(donorInfo.mobile);
   const normalizedPAN = normalizePAN(donorInfo.pan);
@@ -77,7 +74,7 @@ export async function resolveDonor(
     normalizedPAN || undefined,
     normalizedPhone || undefined,
     normalizedEmail || undefined,
-    orgId
+    orgId,
   );
 
   console.log(`Creating new donor: ${newDonorId}`);

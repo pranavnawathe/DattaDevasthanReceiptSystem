@@ -19,7 +19,7 @@ export class RangeAllocationError extends Error {
   constructor(
     message: string,
     public code: string,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
     this.name = 'RangeAllocationError';
@@ -43,9 +43,7 @@ export async function getActiveRange(orgId: string, year: number): Promise<Range
   const ranges = (result.Items || []) as RangeItem[];
 
   // Find active range for this year
-  const activeRange = ranges.find(
-    (r) => r.year === year && r.status === RangeStatus.ACTIVE
-  );
+  const activeRange = ranges.find((r) => r.year === year && r.status === RangeStatus.ACTIVE);
 
   return activeRange || null;
 }
@@ -65,7 +63,7 @@ export async function allocateFromRange(
   orgId: string,
   year: number,
   donationDate: string,
-  flexibleMode: boolean = false
+  flexibleMode: boolean = false,
 ): Promise<AllocationResult> {
   // 1. Find active range for this year
   const activeRange = await getActiveRange(orgId, year);
@@ -74,7 +72,7 @@ export async function allocateFromRange(
     throw new RangeAllocationError(
       `No active range found for year ${year}. Please activate a range first.`,
       'NO_ACTIVE_RANGE',
-      { year }
+      { year },
     );
   }
 
@@ -86,11 +84,13 @@ export async function allocateFromRange(
       throw new RangeAllocationError(
         `Year mismatch: Donation date is ${donationDate} (year ${donationYear}) but active range is for year ${year}. Use flexible mode to override.`,
         'YEAR_MISMATCH',
-        { donationYear, rangeYear: year, donationDate, flexibleMode: false }
+        { donationYear, rangeYear: year, donationDate, flexibleMode: false },
       );
     }
 
-    console.warn(`⚠️  Year mismatch allowed (flexible mode): donation=${donationYear}, range=${year}`);
+    console.warn(
+      `⚠️  Year mismatch allowed (flexible mode): donation=${donationYear}, range=${year}`,
+    );
   }
 
   // 3. Check if range is exhausted BEFORE attempting allocation
@@ -103,7 +103,7 @@ export async function allocateFromRange(
         start: activeRange.start,
         end: activeRange.end,
         next: activeRange.next,
-      }
+      },
     );
   }
 
@@ -153,7 +153,7 @@ export async function allocateFromRange(
     console.log(
       `✅ Allocated ${receiptNo} from range ${activeRange.rangeId} (${currentSeq}/${activeRange.end})${
         isNowExhausted ? ' - RANGE EXHAUSTED' : ''
-      }`
+      }`,
     );
 
     return {
@@ -176,13 +176,13 @@ export async function allocateFromRange(
             PK: Keys.PK.org(orgId),
             SK: Keys.SK.range(activeRange.rangeId),
           },
-        })
+        }),
       );
 
       if (!freshRange.Item) {
         throw new RangeAllocationError(
           `Range ${activeRange.rangeId} was deleted during allocation`,
-          'RANGE_DELETED'
+          'RANGE_DELETED',
         );
       }
 
@@ -193,7 +193,7 @@ export async function allocateFromRange(
         throw new RangeAllocationError(
           `Range ${activeRange.rangeId} is no longer active (status: ${updatedRange.status})`,
           'RANGE_NOT_ACTIVE',
-          { status: updatedRange.status }
+          { status: updatedRange.status },
         );
       }
 
@@ -202,12 +202,18 @@ export async function allocateFromRange(
         throw new RangeAllocationError(
           `Range ${activeRange.rangeId} became exhausted during concurrent allocation`,
           'RANGE_EXHAUSTED',
-          { next: updatedRange.next, end: updatedRange.end }
+          { next: updatedRange.next, end: updatedRange.end },
         );
       }
 
       // Retry allocation with fresh data (single retry to avoid infinite loop)
-      return allocateFromRangeSingleRetry(orgId, updatedRange, donationDate, donationYear, flexibleMode);
+      return allocateFromRangeSingleRetry(
+        orgId,
+        updatedRange,
+        donationDate,
+        donationYear,
+        flexibleMode,
+      );
     }
 
     throw error;
@@ -222,7 +228,7 @@ async function allocateFromRangeSingleRetry(
   range: RangeItem,
   donationDate: string,
   donationYear: number,
-  flexibleMode: boolean
+  flexibleMode: boolean,
 ): Promise<AllocationResult> {
   const currentSeq = range.next;
   const newNext = currentSeq + 1;
@@ -273,7 +279,7 @@ async function allocateFromRangeSingleRetry(
     if (error.name === 'ConditionalCheckFailedException') {
       throw new RangeAllocationError(
         'Failed to allocate receipt number after retry due to high concurrent load',
-        'ALLOCATION_CONFLICT'
+        'ALLOCATION_CONFLICT',
       );
     }
     throw error;

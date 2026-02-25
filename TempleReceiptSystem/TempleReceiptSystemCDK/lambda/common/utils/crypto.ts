@@ -70,9 +70,9 @@ export function maskPhone(phone: string): string {
     return phone; // Return as-is if not Indian mobile
   }
 
-  const countryCode = phone.substring(0, 3);  // +91
-  const start = phone.substring(3, 6);        // First 3 digits
-  const end = phone.substring(11);            // Last 2 digits
+  const countryCode = phone.substring(0, 3); // +91
+  const start = phone.substring(3, 6); // First 3 digits
+  const end = phone.substring(11); // Last 2 digits
 
   return `${countryCode}${start}XXXXX${end}`;
 }
@@ -115,7 +115,10 @@ export function sanitizeForLogs(data: unknown): unknown {
     let sanitized = data.replace(/\b[A-Z]{5}\d{4}[A-Z]\b/g, 'XXXXX****X');
 
     // Mask email patterns
-    sanitized = sanitized.replace(/\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g, 'x***@xxx.com');
+    sanitized = sanitized.replace(
+      /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g,
+      'x***@xxx.com',
+    );
 
     // Mask phone patterns: +91XXXXXXXXXX or 10 digit numbers
     sanitized = sanitized.replace(/\+91\d{10}/g, '+91XXXXXXXXXX');
@@ -126,7 +129,7 @@ export function sanitizeForLogs(data: unknown): unknown {
 
   if (typeof data === 'object' && data !== null) {
     if (Array.isArray(data)) {
-      return data.map(item => sanitizeForLogs(item));
+      return data.map((item) => sanitizeForLogs(item));
     }
 
     const sanitized: Record<string, unknown> = {};

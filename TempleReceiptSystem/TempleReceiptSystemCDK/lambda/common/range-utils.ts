@@ -8,7 +8,10 @@ import { RangeItem, RangeStatus } from './types';
  * Validation error
  */
 export class RangeValidationError extends Error {
-  constructor(message: string, public code: string) {
+  constructor(
+    message: string,
+    public code: string,
+  ) {
     super(message);
     this.name = 'RangeValidationError';
   }
@@ -47,10 +50,7 @@ export function validateRange(range: Partial<RangeItem>): void {
   // Validate next
   if (range.next !== undefined) {
     if (range.next < range.start || range.next > range.end + 1) {
-      throw new RangeValidationError(
-        'Next must be between start and end+1',
-        'INVALID_NEXT'
-      );
+      throw new RangeValidationError('Next must be between start and end+1', 'INVALID_NEXT');
     }
   }
 }

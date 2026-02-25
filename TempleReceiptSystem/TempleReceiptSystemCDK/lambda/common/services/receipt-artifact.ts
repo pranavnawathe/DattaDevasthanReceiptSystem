@@ -71,12 +71,7 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
       doc.moveDown(0.8);
 
       // Horizontal line
-      doc
-        .strokeColor('#8B0000')
-        .lineWidth(1.5)
-        .moveTo(50, doc.y)
-        .lineTo(545, doc.y)
-        .stroke();
+      doc.strokeColor('#8B0000').lineWidth(1.5).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
 
       doc.moveDown(0.5);
 
@@ -88,23 +83,28 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
       // Add donor name with underline
       const nameY = doc.y;
       doc.font('Devanagari').text(donation.donor.name, 50, nameY);
-      doc.moveTo(50, nameY + 15).lineTo(545, nameY + 15).stroke();
+      doc
+        .moveTo(50, nameY + 15)
+        .lineTo(545, nameY + 15)
+        .stroke();
 
       doc.moveDown(0.8);
 
       // "यांजकडून खालील तपशीलाप्रमाणे रक्कम मिळाली."
-      doc.font('Devanagari').fontSize(10)
+      doc
+        .font('Devanagari')
+        .fontSize(10)
         .text('यांजकडून खालील तपशीलाप्रमाणे रक्कम मिळाली.', 50, doc.y);
 
       doc.moveDown(0.5);
 
       // Payment method field
       const paymentMethodMap: Record<string, string> = {
-        'CASH': 'रोख',
-        'UPI': 'यूपीआय',
-        'CHEQUE': 'धनादेश',
-        'NEFT': 'एनईएफटी',
-        'IMPS': 'आयएमपीएस',
+        CASH: 'रोख',
+        UPI: 'यूपीआय',
+        CHEQUE: 'धनादेश',
+        NEFT: 'एनईएफटी',
+        IMPS: 'आयएमपीएस',
       };
 
       const modeString = String(donation.payment.mode);
@@ -129,13 +129,7 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
       const tableWidth = 495;
       const rowHeight = 30;
 
-      const categories = [
-        'कार्यम निधी',
-        'उत्सव देणगी',
-        'धार्मिक कार्य',
-        'अन्नदान',
-        'इतर'
-      ];
+      const categories = ['कार्यम निधी', 'उत्सव देणगी', 'धार्मिक कार्य', 'अन्नदान', 'इतर'];
 
       // Draw table headers
       doc.fontSize(10).font('Devanagari').fillColor('#000');
@@ -152,11 +146,11 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
 
       // Map donation breakup to categories
       const categoryMap: Record<string, string> = {
-        'TEMPLE_GENERAL': 'कार्यम निधी',
-        'FESTIVAL': 'उत्सव देणगी',
-        'POOJA': 'धार्मिक कार्य',
-        'ANNADAAN': 'अन्नदान',
-        'OTHER': 'इतर'
+        TEMPLE_GENERAL: 'कार्यम निधी',
+        FESTIVAL: 'उत्सव देणगी',
+        POOJA: 'धार्मिक कार्य',
+        ANNADAAN: 'अन्नदान',
+        OTHER: 'इतर',
       };
 
       // Draw category rows
@@ -257,7 +251,7 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
 export async function uploadReceiptToS3(
   receiptNo: string,
   content: Buffer,
-  contentType: string = 'application/pdf'
+  contentType: string = 'application/pdf',
 ): Promise<string> {
   const bucketName = getReceiptsBucketName();
   const year = receiptNo.split('-')[0];
@@ -274,7 +268,7 @@ export async function uploadReceiptToS3(
           receiptNo,
           generatedAt: new Date().toISOString(),
         },
-      })
+      }),
     );
 
     console.log(`✅ Receipt uploaded to S3: s3://${bucketName}/${key}`);
@@ -303,8 +297,30 @@ export async function createAndUploadReceipt(donation: DonationItem): Promise<st
  */
 function numberToWordsEnglish(num: number): string {
   const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-  const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = [
+    '',
+    '',
+    'Twenty',
+    'Thirty',
+    'Forty',
+    'Fifty',
+    'Sixty',
+    'Seventy',
+    'Eighty',
+    'Ninety',
+  ];
+  const teens = [
+    'Ten',
+    'Eleven',
+    'Twelve',
+    'Thirteen',
+    'Fourteen',
+    'Fifteen',
+    'Sixteen',
+    'Seventeen',
+    'Eighteen',
+    'Nineteen',
+  ];
 
   if (num === 0) return 'Zero';
 
@@ -312,10 +328,21 @@ function numberToWordsEnglish(num: number): string {
     if (n < 10) return ones[n];
     if (n < 20) return teens[n - 10];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-    if (n < 1000) return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '');
-    if (n < 100000) return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
-    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
-    return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+    if (n < 1000)
+      return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '');
+    if (n < 100000)
+      return (
+        convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '')
+      );
+    if (n < 10000000)
+      return (
+        convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '')
+      );
+    return (
+      convert(Math.floor(n / 10000000)) +
+      ' Crore' +
+      (n % 10000000 ? ' ' + convert(n % 10000000) : '')
+    );
   };
 
   const rupees = Math.floor(num);
@@ -344,10 +371,19 @@ function numberToWordsMarathi(num: number): string {
     if (n < 10) return ones[n];
     if (n < 20) return teens[n - 10];
     if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
-    if (n < 1000) return ones[Math.floor(n / 100)] + ' शे' + (n % 100 ? ' ' + convert(n % 100) : '');
-    if (n < 100000) return convert(Math.floor(n / 1000)) + ' हजार' + (n % 1000 ? ' ' + convert(n % 1000) : '');
-    if (n < 10000000) return convert(Math.floor(n / 100000)) + ' लाख' + (n % 100000 ? ' ' + convert(n % 100000) : '');
-    return convert(Math.floor(n / 10000000)) + ' कोटी' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+    if (n < 1000)
+      return ones[Math.floor(n / 100)] + ' शे' + (n % 100 ? ' ' + convert(n % 100) : '');
+    if (n < 100000)
+      return convert(Math.floor(n / 1000)) + ' हजार' + (n % 1000 ? ' ' + convert(n % 1000) : '');
+    if (n < 10000000)
+      return (
+        convert(Math.floor(n / 100000)) + ' लाख' + (n % 100000 ? ' ' + convert(n % 100000) : '')
+      );
+    return (
+      convert(Math.floor(n / 10000000)) +
+      ' कोटी' +
+      (n % 10000000 ? ' ' + convert(n % 10000000) : '')
+    );
   };
 
   const rupees = Math.floor(num);

@@ -27,16 +27,15 @@ export class PipelineStack extends cdk.Stack {
         input: source,
         commands: [
           // Install Lambda dependencies
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm ci',
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts && npm ci',
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/ranges && npm ci',
-          // Run unit tests
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm test',
+          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm ci && cd $CODEBUILD_SRC_DIR',
+          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts && npm ci && cd $CODEBUILD_SRC_DIR',
+          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/ranges && npm ci && cd $CODEBUILD_SRC_DIR',
+          // Run Lambda unit tests
+          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm test && cd $CODEBUILD_SRC_DIR',
           // Build UI
-          'cd ui && npm ci && npm run build',
+          'cd TempleReceiptSystem/TempleReceiptSystemCDK/ui && npm ci && npm run build && cd $CODEBUILD_SRC_DIR',
           // Install CDK deps and synth
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK && npm ci',
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK && npx cdk synth',
+          'cd TempleReceiptSystem/TempleReceiptSystemCDK && npm ci && npx cdk synth',
         ],
         primaryOutputDirectory: 'TempleReceiptSystem/TempleReceiptSystemCDK/cdk.out',
       }),

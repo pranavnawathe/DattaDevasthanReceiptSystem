@@ -1,6 +1,12 @@
 import { RemovalPolicy, Stack, StackProps } from 'aws-cdk-lib';
 import { Construct } from 'constructs';
-import { AttributeType, BillingMode, Table, ProjectionType, TableEncryption } from 'aws-cdk-lib/aws-dynamodb';
+import {
+  AttributeType,
+  BillingMode,
+  Table,
+  ProjectionType,
+  TableEncryption,
+} from 'aws-cdk-lib/aws-dynamodb';
 import { Bucket, BlockPublicAccess } from 'aws-cdk-lib/aws-s3';
 
 export interface FoundationStackProps extends StackProps {

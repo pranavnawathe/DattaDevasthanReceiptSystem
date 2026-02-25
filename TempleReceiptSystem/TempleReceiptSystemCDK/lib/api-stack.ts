@@ -67,19 +67,58 @@ export class ApiStack extends cdk.Stack {
     });
 
     // Receipts routes
-    const receiptsIntegration = new integrations.HttpLambdaIntegration('ReceiptsIntegration', receiptsFn);
-    httpApi.addRoutes({ path: '/health', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
-    httpApi.addRoutes({ path: '/receipts', methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: receiptsIntegration });
-    httpApi.addRoutes({ path: '/receipts/search', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
-    httpApi.addRoutes({ path: '/receipts/donor/{donorId}', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
-    httpApi.addRoutes({ path: '/receipts/{receiptNo}/download', methods: [apigwv2.HttpMethod.GET], integration: receiptsIntegration });
-    httpApi.addRoutes({ path: '/receipts/export', methods: [apigwv2.HttpMethod.POST], integration: receiptsIntegration });
+    const receiptsIntegration = new integrations.HttpLambdaIntegration(
+      'ReceiptsIntegration',
+      receiptsFn,
+    );
+    httpApi.addRoutes({
+      path: '/health',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: receiptsIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/receipts',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: receiptsIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/receipts/search',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: receiptsIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/receipts/donor/{donorId}',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: receiptsIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/receipts/{receiptNo}/download',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: receiptsIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/receipts/export',
+      methods: [apigwv2.HttpMethod.POST],
+      integration: receiptsIntegration,
+    });
 
     // Ranges routes
     const rangesIntegration = new integrations.HttpLambdaIntegration('RangesIntegration', rangesFn);
-    httpApi.addRoutes({ path: '/ranges', methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST], integration: rangesIntegration });
-    httpApi.addRoutes({ path: '/ranges/{rangeId}', methods: [apigwv2.HttpMethod.GET], integration: rangesIntegration });
-    httpApi.addRoutes({ path: '/ranges/{rangeId}/status', methods: [apigwv2.HttpMethod.PUT], integration: rangesIntegration });
+    httpApi.addRoutes({
+      path: '/ranges',
+      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
+      integration: rangesIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/ranges/{rangeId}',
+      methods: [apigwv2.HttpMethod.GET],
+      integration: rangesIntegration,
+    });
+    httpApi.addRoutes({
+      path: '/ranges/{rangeId}/status',
+      methods: [apigwv2.HttpMethod.PUT],
+      integration: rangesIntegration,
+    });
 
     new cdk.CfnOutput(this, 'HttpApiUrl', { value: httpApi.apiEndpoint });
   }

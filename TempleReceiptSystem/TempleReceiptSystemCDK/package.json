@@ -9,22 +9,30 @@
     "synth": "cdk synth",
     "deploy": "cdk deploy",
     "diff": "cdk diff",
-    "test": "echo 'No tests yet'",
+    "test": "jest --passWithNoTests",
+    "test:lambda": "cd lambda/common && npm test",
+    "test:all": "npm test && npm run test:lambda",
+    "format": "prettier --write 'bin/**/*.ts' 'lib/**/*.ts' 'lambda/**/*.ts' --ignore-path ../../.prettierignore",
+    "format:check": "prettier --check 'bin/**/*.ts' 'lib/**/*.ts' 'lambda/**/*.ts' --ignore-path ../../.prettierignore",
     "install:lambda": "cd lambda/receipts && npm install",
     "deploy:pipeline": "cdk deploy TempleReceiptPipelineStack --app 'npx ts-node --prefer-ts-exts bin/pipeline.ts' --require-approval never"
   },
   "author": "",
   "license": "MIT",
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "aws-cdk": "^2.130.0",
+    "jest": "^30.2.0",
+    "prettier": "^3.8.1",
+    "ts-jest": "^29.4.6",
     "typescript": "^5.3.3"
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.913.0",
     "@aws-sdk/client-s3": "^3.913.0",
     "@aws-sdk/lib-dynamodb": "^3.913.0",
-    "aws-lambda": "^1.0.7",
     "aws-cdk-lib": "^2.130.0",
+    "aws-lambda": "^1.0.7",
     "constructs": "^10.0.0"
   }
 }

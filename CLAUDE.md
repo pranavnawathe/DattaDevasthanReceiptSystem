@@ -4,57 +4,70 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**TempleReceiptSystem Backend** is a donation management and e-receipt system for a temple organization in Maharashtra, India. The system enables committee members to enter donation details and generate bilingual (Marathi + English) e-receipts as PDFs that can be printed, emailed, or shared via WhatsApp.
+**Datta Devasthan Receipt System** is a full-stack donation management and e-receipt system for **श्री दत्त देवस्थान कोंडगांव (साखरपा)**, a temple in Maharashtra, India. Committee members use it to record donations and generate bilingual (Marathi + English) PDF receipts.
 
 ## Technology Stack
 
 - **AWS CDK v2** with TypeScript for infrastructure as code
 - **Node.js 20** for Lambda functions
 - **AWS SDK v3** for AWS service interactions
-- **DynamoDB** for data storage with point-in-time recovery
+- **DynamoDB** for data storage (single-table design)
 - **S3** for storing receipt PDFs and exports
 - **API Gateway (HTTP API)** with Lambda integration
+- **React 19 + Vite + Tailwind CSS** for the frontend
+- **PDFKit + Noto Sans Devanagari** for bilingual PDF generation
+- **AWS CodePipeline** for CI/CD (test → prod with manual approval gate)
 
 ## Project Structure
 
-The main codebase is located in `TempleReceiptSystem/TempleReceiptSystemCDK/`:
+The main codebase is in `TempleReceiptSystem/TempleReceiptSystemCDK/` (CDK + Lambda) and `ui/` (frontend):
 
 ```
-TempleReceiptSystemCDK/
-├── bin/temple-backend.ts        # CDK app entry point
-├── lib/
-│   ├── foundation-stack.ts      # DynamoDB tables and S3 buckets
-│   └── api-stack.ts             # API Gateway and Lambda functions
-├── lambda/
-│   ├── receipts/                # Receipt creation/retrieval handlers
-│   └── common/                  # Shared types and utilities
-├── package.json
-└── tsconfig.json
+repo root/
+├── TempleReceiptSystem/TempleReceiptSystemCDK/
+│   ├── bin/
+│   │   ├── pipeline.ts          # CDK pipeline entry point (used in CI)
+│   │   └── temple-backend.ts    # Direct CDK app entry point (manual deploys)
+│   ├── lib/
+│   │   ├── pipeline-stack.ts    # CodePipeline (test + prod stages)
+│   │   ├── temple-app-stage.ts  # Stage grouping Foundation + API + UI stacks
+│   │   ├── foundation-stack.ts  # DynamoDB table and S3 buckets
+│   │   ├── api-stack.ts         # API Gateway and Lambda function
+│   │   └── ui-stack.ts          # S3 static website hosting for React app
+│   └── lambda/
+│       ├── receipts/            # Receipt creation/retrieval handlers
+│       └── common/              # Shared types, services, and utilities
+├── ui/                          # React frontend (Vite)
+└── docs/                        # Project documentation
 ```
 
 ## Architecture
 
-The system uses a two-stack architecture:
+The system uses a **four-stack architecture** deployed via CodePipeline through test and prod stages:
 
-1. **FoundationStack**: Creates foundational resources
-   - DynamoDB table with PK/SK design pattern
-   - GSI1: donor lookups (donorId, date)
-   - GSI2: date range queries (date, receiptNo)
+1. **FoundationStack**: Data layer
+   - DynamoDB single-table design (`ORG#<orgId>` PK)
+   - GSI1: donor lookups; GSI2: date-range queries
    - Private S3 buckets for receipts and exports
+   - PITR enabled on prod; auto-delete on test
 
-2. **ApiStack**: API layer
+2. **ApiStack**: Compute layer
    - HTTP API Gateway with CORS enabled
-   - Lambda function (Node.js 20, ARM64)
-   - Routes: `/health` (GET), `/receipts` (POST)
+   - Single Lambda function (Node.js 20, ARM64)
+   - Routes: `GET /health`, `GET/POST /receipts`, `GET /receipts/search`, `GET /receipts/donor/{donorId}`, `GET /receipts/{receiptNo}/download`, `POST /receipts/export`
+
+3. **UiStack**: Frontend hosting
+   - S3 static website (`datta-devasthan-receipts` prod / `datta-devasthan-receipts-test` test)
+
+4. **PipelineStack**: CI/CD
+   - CodePipeline: test stage auto-deploys on push; prod requires manual approval
 
 ## Common Development Commands
 
-### Build and Deploy
+### Backend (from `TempleReceiptSystem/TempleReceiptSystemCDK/`)
 
 ```bash
-cd TempleReceiptSystem/TempleReceiptSystemCDK
-
-# Install dependencies
+# Install CDK dependencies
 npm install
 
 # Install Lambda function dependencies
@@ -63,35 +76,25 @@ npm run install:lambda
 # Compile TypeScript
 npm run build
 
-# Watch mode for development
-npm run watch
+# Synthesize CloudFormation (via pipeline entry point)
+npx cdk synth --app "npx ts-node --prefer-ts-exts bin/pipeline.ts"
 
-# Synthesize CloudFormation templates
-npm run synth
-
-# Show stack differences
-npm run diff
-
-# Deploy stacks to AWS
-npm run deploy
+# Deploy pipeline stack (only needed once)
+npx cdk deploy PipelineStack --app "npx ts-node --prefer-ts-exts bin/pipeline.ts"
 ```
 
-### CDK Commands
+### Frontend (from `ui/`)
 
 ```bash
-# Deploy specific stack
-cdk deploy FoundationStack
-cdk deploy TempleApiStack
+npm install
+npm run dev      # Vite dev server at localhost:5173
+npm run build    # Production build → dist/
+```
 
-# Destroy stacks
-cdk destroy FoundationStack
-cdk destroy TempleApiStack
+### Lambda Tests (from `lambda/common/`)
 
-# List all stacks
-cdk list
-
-# Show CloudFormation template
-cdk synth FoundationStack
+```bash
+npm test
 ```
 
 ## Development Guidelines
@@ -114,32 +117,53 @@ cdk synth FoundationStack
 
 ### DynamoDB Data Model
 
-The donations table uses a single-table design:
+Single-table design with `ORG#<orgId>` as the partition key:
 
-- **Partition Key (PK)**: `DONATION#<donationId>` or `DONOR#<donorId>`
-- **Sort Key (SK)**: `METADATA` or `DONATION#<timestamp>`
-- **GSI1**: Donor lookups via `donorId` and `date`
-- **GSI2**: Date range queries via `date` and `receiptNo`
+- **PK**: `ORG#<orgId>`
+- **SK** by entity type:
+  - Receipts: `RCPT#<receiptNo>` (e.g., `RCPT#00071-2025-26`)
+  - Donors: `DONOR#<donorId>`
+  - Aliases (phone/PAN/email lookups): `ALIAS#<type>#<value>`
+  - Counters: `COUNTER#RECEIPT#<financialYear>` (e.g., `COUNTER#RECEIPT#2025-26`)
+- **GSI1**: Donor → donations (`DONOR#<donorId>` → `DATE#<date>#RCPT#<receiptNo>`)
+- **GSI2**: Date range queries (`DATE#<date>` → `RCPT#<receiptNo>`)
+
+### Receipt Numbering
+
+- **Display format** (PDF): `NNNNN/YYYY-YY` (e.g., `00071/2025-26`)
+- **Storage format** (DB, URLs, S3 keys): `NNNNN-YYYY-YY` (e.g., `00071-2025-26`)
+- Counter resets to 1 each April (Indian financial year: Apr–Mar)
+- Allocated atomically via DynamoDB `UpdateExpression` with `ADD` on counter item
 
 ### Security Best Practices
 
-- All S3 buckets have `BlockPublicAccess.BLOCK_ALL`
-- DynamoDB has point-in-time recovery enabled
+- Receipts/exports S3 buckets have `BlockPublicAccess.BLOCK_ALL`
+- UI S3 bucket uses `BlockPublicAccess.BLOCK_ACLS` (public website hosting)
+- DynamoDB PITR enabled on prod, disabled on test
 - Lambda functions follow least-privilege IAM
 - No hardcoded credentials (use AWS SDK default credential chain)
 
 ### AWS Configuration
 
 - **Region**: ap-south-1 (Mumbai)
-- **Account ID**: 671924214635 (configured in `bin/temple-backend.ts`)
+- **Account ID**: 671924214635
 
-## Future Development Phases
+## Implemented Features
 
-- CSV/Excel export functionality for Tally integration
-- Audit trail and logging
-- PDF generation for bilingual receipts (Marathi + English)
-- Donor management features
-- Email/WhatsApp integration
+- Bilingual PDF receipt generation (Marathi देवनागरी + English)
+- Receipt numbering with financial-year sequential counter
+- Donor creation and deduplication (by phone/PAN/email)
+- Donor search
+- CSV export for Tally integration (with date chunking)
+- Presigned S3 URLs for PDF download (1hr expiry)
+- CI/CD pipeline: test stage auto-deploys; prod requires manual approval
+
+## Known Gaps / Future Work
+
+- No authentication (anyone with URL can access)
+- No receipt editing (void flow designed but not fully implemented)
+- Void watermark on PDF not implemented
+- No email/WhatsApp sharing
 
 ## Code Organization
 

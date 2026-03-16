@@ -37,8 +37,7 @@ docs/
 2. [PROJECT_STATUS.md](PROJECT_STATUS.md) - Current status and roadmap
 
 ### For Users
-1. [../README.md](../README.md) - Quick start and setup
-2. [../UI_DEMO_GUIDE.md](../UI_DEMO_GUIDE.md) - User guide with screenshots
+1. [PROJECT_OVERVIEW.md](PROJECT_OVERVIEW.md) - System overview and features
 
 ## 📖 Documentation Guide
 
@@ -143,34 +142,6 @@ docs/
 
 ---
 
-#### [components/DATA_MODEL.md](components/DATA_MODEL.md) (Future)
-**Audience**: Backend developers, database administrators
-**Purpose**: Database schema and design patterns
-
-**Contents** (Planned):
-- DynamoDB table design
-- Access patterns
-- GSI design rationale
-- Key structure
-- Item types
-- Query examples
-- Migration strategy
-
----
-
-#### [components/PDF_GENERATION.md](components/PDF_GENERATION.md) (Future)
-**Audience**: Backend developers
-**Purpose**: PDF generation technical details
-
-**Contents** (Planned):
-- PDFKit usage
-- Font embedding (Noto Sans Devanagari)
-- Layout algorithms
-- Marathi text rendering
-- Number to words conversion
-- Template customization
-
----
 
 ## 🗂️ Archived Documentation
 
@@ -197,7 +168,7 @@ The `archive/` directory contains historical documentation from early developmen
 | **Project Manager** | PROJECT_STATUS.md | PROJECT_OVERVIEW.md |
 | **DevOps Engineer** | ARCHITECTURE.md | BACKEND.md |
 | **UI/UX Designer** | FRONTEND.md | PROJECT_OVERVIEW.md |
-| **End User** | ../UI_DEMO_GUIDE.md | ../README.md |
+| **End User** | PROJECT_OVERVIEW.md | — |
 | **Stakeholder** | PROJECT_OVERVIEW.md | PROJECT_STATUS.md |
 
 ### By Task
@@ -294,5 +265,5 @@ Private project for Shri Datta Devasthan, Kondgaon (Sakharpa), Maharashtra, Indi
 
 ---
 
-**Last Updated**: October 26, 2025
-**Documentation Version**: 1.0
+**Last Updated**: March 2026
+**Documentation Version**: 1.1

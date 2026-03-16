@@ -13,7 +13,6 @@ import {
   listReceiptsByDate,
   listReceiptsByDateRange,
   listReceiptsByDonor,
-  listReceiptsByRange,
   getReceiptByNumber,
   searchDonorByIdentifier,
 } from '../common/services/receipt-listing';
@@ -86,7 +85,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         date,
         startDate,
         endDate,
-        rangeId,
         receiptNo,
         donorId,
         includeVoided,
@@ -114,12 +112,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       // List by donor ID
       if (donorId) {
         const result = await listReceiptsByDonor(ORG_ID, donorId, pagination, includeVoidedFlag);
-        return json(200, { success: true, ...result });
-      }
-
-      // List by range ID
-      if (rangeId) {
-        const result = await listReceiptsByRange(ORG_ID, rangeId, pagination, includeVoidedFlag);
         return json(200, { success: true, ...result });
       }
 
@@ -204,7 +196,7 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
       // Extract receipt number from path: /receipts/2025-00008/download
       const receiptNo = path.split('/')[2];
 
-      if (!receiptNo || !receiptNo.match(/^\d{4}-\d{5}$/)) {
+      if (!receiptNo || !receiptNo.match(/^(\d{5}-\d{4}-\d{2}|\d{4}-\d{5})$/)) {
         return json(400, { success: false, error: 'Invalid receipt number format' });
       }
 
@@ -251,7 +243,6 @@ export const handler = async (event: APIGatewayProxyEventV2): Promise<APIGateway
         format: exportRequest.format,
         startDate: exportRequest.startDate,
         endDate: exportRequest.endDate,
-        rangeId: exportRequest.rangeId,
         includeVoided: exportRequest.includeVoided || false,
       });
 

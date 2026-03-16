@@ -29,7 +29,6 @@ export class PipelineStack extends cdk.Stack {
           // Install Lambda dependencies
           'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm ci && cd $CODEBUILD_SRC_DIR',
           'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/receipts && npm ci && cd $CODEBUILD_SRC_DIR',
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/ranges && npm ci && cd $CODEBUILD_SRC_DIR',
           // Run Lambda unit tests
           'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm test && cd $CODEBUILD_SRC_DIR',
           // Build UI

@@ -19,7 +19,6 @@ export interface ExportOptions {
   format: ExportFormat;
   startDate: string; // yyyy-mm-dd
   endDate: string; // yyyy-mm-dd
-  rangeId?: string; // Optional: filter by range
   includeVoided?: boolean; // Include voided receipts (default: false)
 }
 
@@ -113,14 +112,9 @@ export async function generateExport(orgId: string, options: ExportOptions): Pro
     }
   }
 
-  // Filter by range if specified
-  const filteredReceipts = options.rangeId
-    ? receipts.filter((r) => r.rangeId === options.rangeId)
-    : receipts;
-
   // Generate CSV
   if (options.format === 'csv') {
-    const csvContent = generateCSV(filteredReceipts);
+    const csvContent = generateCSV(receipts);
     const fileName = generateFileName(options, 'csv');
 
     return {
@@ -128,7 +122,7 @@ export async function generateExport(orgId: string, options: ExportOptions): Pro
       format: 'csv',
       fileName,
       content: csvContent,
-      recordCount: filteredReceipts.length,
+      recordCount: receipts.length,
       dateRange: {
         start: options.startDate,
         end: options.endDate,
@@ -205,13 +199,9 @@ function escapeCSVField(field: string): string {
  * Generate file name based on export options
  */
 function generateFileName(options: ExportOptions, extension: string): string {
-  const { startDate, endDate, rangeId } = options;
-
+  const { startDate, endDate } = options;
   const dateStr = startDate === endDate ? startDate : `${startDate}_to_${endDate}`;
-
-  const rangeStr = rangeId ? `_${rangeId}` : '';
-
-  return `receipts_export_${dateStr}${rangeStr}.${extension}`;
+  return `receipts_export_${dateStr}.${extension}`;
 }
 
 /**

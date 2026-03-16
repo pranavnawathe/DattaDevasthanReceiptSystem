@@ -4,7 +4,8 @@
 
 import { PutCommand, TransactWriteCommand } from '@aws-sdk/lib-dynamodb';
 import { docClient, getTableName } from '../db/dynamo-client';
-import { allocateFromRange, RangeAllocationError } from './range-allocator';
+import { getNextReceiptNumber } from '../db/counter';
+import { getFinancialYear } from '../utils/id-generator';
 import { resolveDonor, validateDonorInfo } from './donor-resolver';
 import {
   CreateReceiptRequest,
@@ -74,31 +75,13 @@ export async function createDonation(
   // 5. Get donation date (use provided or today)
   const donationDate = normalizeDate(request.date) || getTodayISO();
 
-  // 6. Get current year for range lookup
-  const currentYear = new Date().getFullYear();
+  // 6. Get financial year for receipt numbering
+  const { year: financialYear } = getFinancialYear(donationDate);
 
-  // 7. Allocate receipt number from active range
-  let allocation;
-  try {
-    allocation = await allocateFromRange(
-      orgId,
-      currentYear,
-      donationDate,
-      request.flexibleMode || false,
-    );
-  } catch (error) {
-    if (error instanceof RangeAllocationError) {
-      throw new Error(`Receipt allocation failed: ${error.message} (${error.code})`);
-    }
-    throw error;
-  }
+  // 7. Allocate receipt number from sequential counter
+  const receiptNo = await getNextReceiptNumber(orgId, financialYear);
 
-  const receiptNo = allocation.receiptNo;
-  const rangeId = allocation.rangeId;
-
-  console.log(
-    `Creating donation: ${receiptNo} from range ${rangeId} for donor: ${donorId} (isNew: ${isNew})`,
-  );
+  console.log(`Creating donation: ${receiptNo} for donor: ${donorId} (isNew: ${isNew})`);
 
   // 7. Build donation item
   const donationItem: DonationItem = {
@@ -110,7 +93,6 @@ export async function createDonation(
     GSI2SK: Keys.GSI2.receipt(receiptNo),
     orgId,
     receiptNo,
-    rangeId,
     date: donationDate,
     donorId,
     donor: {

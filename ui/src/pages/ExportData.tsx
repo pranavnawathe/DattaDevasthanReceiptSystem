@@ -7,7 +7,6 @@ interface ExportRequest {
   format: 'csv' | 'excel';
   startDate: string;
   endDate: string;
-  rangeId?: string;
   includeVoided?: boolean;
 }
 
@@ -27,7 +26,6 @@ export function ExportData() {
   const [format, setFormat] = useState<'csv' | 'excel'>('csv');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
-  const [rangeId, setRangeId] = useState('');
   const [includeVoided, setIncludeVoided] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,10 +61,6 @@ export function ExportData() {
         endDate,
         includeVoided,
       };
-
-      if (rangeId.trim()) {
-        exportRequest.rangeId = rangeId.trim();
-      }
 
       // Call export API
       const response = await fetch(`${API_URL}/receipts/export`, {
@@ -268,24 +262,6 @@ export function ExportData() {
                   required
                 />
               </div>
-            </div>
-
-            {/* Range Filter (Optional) */}
-            <div className="mb-6">
-              <label htmlFor="rangeId" className="block text-sm font-medium text-gray-700 mb-2 marathi">
-                श्रेणी फिल्टर / Range Filter (पर्यायी / Optional)
-              </label>
-              <input
-                type="text"
-                id="rangeId"
-                value={rangeId}
-                onChange={(e) => setRangeId(e.target.value)}
-                placeholder="उदा. / e.g. 2025-A"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <p className="text-xs text-gray-500 mt-1 marathi">
-                विशिष्ट श्रेणीची पावत्या निर्यात करण्यासाठी / To export receipts from a specific range
-              </p>
             </div>
 
             {/* Include Voided */}

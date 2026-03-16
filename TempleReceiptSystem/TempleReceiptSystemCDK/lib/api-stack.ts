@@ -36,22 +36,6 @@ export class ApiStack extends cdk.Stack {
     props.receiptsBucket.grantReadWrite(receiptsFn);
     props.exportsBucket.grantReadWrite(receiptsFn);
 
-    // Ranges Lambda Function
-    const rangesFn = new lambda.Function(this, 'RangesFn', {
-      runtime: lambda.Runtime.NODEJS_20_X,
-      architecture: lambda.Architecture.ARM_64,
-      handler: 'ranges/index.handler',
-      code: lambda.Code.fromAsset('lambda'),
-      memorySize: 256,
-      timeout: cdk.Duration.seconds(10),
-      environment: {
-        TABLE_NAME: props.donationsTable.tableName,
-      },
-    });
-
-    // Grant Ranges Lambda permissions to access DynamoDB
-    props.donationsTable.grantReadWriteData(rangesFn);
-
     const httpApi = new apigwv2.HttpApi(this, 'TempleHttpApi', {
       corsPreflight: {
         allowOrigins: ['*'], // Allows all origins including http://localhost:5173
@@ -100,24 +84,6 @@ export class ApiStack extends cdk.Stack {
       path: '/receipts/export',
       methods: [apigwv2.HttpMethod.POST],
       integration: receiptsIntegration,
-    });
-
-    // Ranges routes
-    const rangesIntegration = new integrations.HttpLambdaIntegration('RangesIntegration', rangesFn);
-    httpApi.addRoutes({
-      path: '/ranges',
-      methods: [apigwv2.HttpMethod.GET, apigwv2.HttpMethod.POST],
-      integration: rangesIntegration,
-    });
-    httpApi.addRoutes({
-      path: '/ranges/{rangeId}',
-      methods: [apigwv2.HttpMethod.GET],
-      integration: rangesIntegration,
-    });
-    httpApi.addRoutes({
-      path: '/ranges/{rangeId}/status',
-      methods: [apigwv2.HttpMethod.PUT],
-      integration: rangesIntegration,
     });
 
     new cdk.CfnOutput(this, 'HttpApiUrl', { value: httpApi.apiEndpoint });

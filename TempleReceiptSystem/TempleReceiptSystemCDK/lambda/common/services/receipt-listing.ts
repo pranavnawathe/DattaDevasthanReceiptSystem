@@ -193,61 +193,6 @@ export async function listReceiptsByDonor(
 }
 
 /**
- * List receipts from a specific range
- * Queries all receipts and filters by rangeId
- *
- * @param orgId - Organization ID
- * @param rangeId - Range ID (e.g., "2025-H")
- * @param params - Pagination parameters
- * @param includeVoided - Include voided receipts
- * @returns Paginated list of receipts
- */
-export async function listReceiptsByRange(
-  orgId: string,
-  rangeId: string,
-  params?: PaginationParams,
-  includeVoided: boolean = false,
-): Promise<PaginatedResponse<DonationItem>> {
-  const limit = Math.min(params?.limit || 50, 100);
-
-  const queryParams: any = {
-    TableName: getTableName(),
-    KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-    ExpressionAttributeValues: {
-      ':pk': Keys.PK.org(orgId),
-      ':sk': 'RCPT#',
-    },
-    ScanIndexForward: false, // Sort descending
-  };
-
-  if (params?.lastEvaluatedKey) {
-    queryParams.ExclusiveStartKey = JSON.parse(
-      Buffer.from(params.lastEvaluatedKey, 'base64').toString(),
-    );
-  }
-
-  const result = await docClient.send(new QueryCommand(queryParams));
-  let items = (result.Items || []) as DonationItem[];
-
-  // Filter by rangeId
-  items = items.filter((item) => item.rangeId === rangeId);
-
-  // Filter voided if needed
-  if (!includeVoided) {
-    items = items.filter((item) => !item.updatedAt || item.pdfKey);
-  }
-
-  // Apply limit
-  const paginatedItems = items.slice(0, limit);
-
-  return {
-    items: paginatedItems,
-    nextToken: undefined, // Simplified
-    count: paginatedItems.length,
-  };
-}
-
-/**
  * Get a single receipt by receipt number
  *
  * @param orgId - Organization ID

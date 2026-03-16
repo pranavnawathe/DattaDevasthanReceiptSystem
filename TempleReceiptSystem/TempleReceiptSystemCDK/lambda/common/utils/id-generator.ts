@@ -51,33 +51,99 @@ export function generateDonorId(
 }
 
 /**
- * Generate receipt number in format: YYYY-NNNNN
- * Example: 2025-00071
+ * Get the Indian financial year for a given date.
+ * Financial year runs April 1 to March 31.
+ * Example: Feb 2026 → { year: 2025, label: '2025-26' }
+ * Example: Apr 2025 → { year: 2025, label: '2025-26' }
+ * Example: Mar 2025 → { year: 2024, label: '2024-25' }
  *
- * @param year - Receipt year
- * @param sequence - Sequence number (1, 2, 3, ...)
- * @returns Formatted receipt number
+ * @param date - ISO date string (yyyy-mm-dd), defaults to today
+ * @returns { year: number, label: string } where year is the start year of the FY
  */
-export function generateReceiptNo(year: number, sequence: number): string {
-  const paddedSeq = String(sequence).padStart(5, '0');
-  return `${year}-${paddedSeq}`;
+export function getFinancialYear(date?: string): { year: number; label: string } {
+  let calYear: number;
+  let month: number;
+
+  if (date) {
+    // Parse yyyy-mm-dd directly to avoid UTC timezone shift from new Date(string)
+    const parts = date.split('-');
+    calYear = parseInt(parts[0], 10);
+    month = parseInt(parts[1], 10);
+  } else {
+    const d = new Date();
+    calYear = d.getFullYear();
+    month = d.getMonth() + 1;
+  }
+
+  const fyStart = month >= 4 ? calYear : calYear - 1;
+  const fyEnd = (fyStart + 1) % 100;
+  const label = `${fyStart}-${String(fyEnd).padStart(2, '0')}`;
+
+  return { year: fyStart, label };
 }
 
 /**
- * Parse receipt number to extract year and sequence
- * Example: "2025-00071" → { year: 2025, sequence: 71 }
+ * Generate receipt number in format: NNNNN-YYYY-YY
+ * Example: 00071-2025-26
+ *
+ * Stored with hyphens to avoid URL path conflicts.
+ * Use displayReceiptNo() to get the display format (00071/2025-26).
+ *
+ * @param financialYear - Start year of the financial year (e.g. 2025 for FY 2025-26)
+ * @param sequence - Sequence number (1, 2, 3, ...)
+ * @returns Formatted receipt number
+ */
+export function generateReceiptNo(financialYear: number, sequence: number): string {
+  const paddedSeq = String(sequence).padStart(5, '0');
+  const fyEnd = String((financialYear + 1) % 100).padStart(2, '0');
+  return `${paddedSeq}-${financialYear}-${fyEnd}`;
+}
+
+/**
+ * Convert stored receipt number to display format for PDF/UI.
+ * Example: "00071-2025-26" → "00071/2025-26"
+ * Old format passthrough: "2025-00071" → "2025-00071" (unchanged)
+ *
+ * @param receiptNo - Stored receipt number
+ * @returns Display-formatted receipt number
+ */
+export function displayReceiptNo(receiptNo: string): string {
+  // New format: NNNNN-YYYY-YY → NNNNN/YYYY-YY
+  const newMatch = receiptNo.match(/^(\d{5})-(\d{4}-\d{2})$/);
+  if (newMatch) {
+    return `${newMatch[1]}/${newMatch[2]}`;
+  }
+  // Old format: return as-is
+  return receiptNo;
+}
+
+/**
+ * Parse receipt number to extract financial year and sequence.
+ * Supports both new format (NNNNN-YYYY-YY) and old format (YYYY-NNNNN).
  *
  * @param receiptNo - Receipt number string
  * @returns Object with year and sequence, or null if invalid
  */
 export function parseReceiptNo(receiptNo: string): { year: number; sequence: number } | null {
-  const match = receiptNo.match(/^(\d{4})-(\d{5})$/);
-  if (!match) return null;
+  // New format: NNNNN-YYYY-YY
+  const newMatch = receiptNo.match(/^(\d{5})-(\d{4})-\d{2}$/);
+  if (newMatch) {
+    return {
+      year: parseInt(newMatch[2], 10),
+      sequence: parseInt(newMatch[1], 10),
+    };
+  }
 
-  return {
-    year: parseInt(match[1], 10),
-    sequence: parseInt(match[2], 10),
-  };
+  // Old format: YYYY-NNNNN
+  const oldMatch = receiptNo.match(/^(\d{4})-(\d{5})$/);
+  if (oldMatch) {
+    return {
+      year: parseInt(oldMatch[1], 10),
+      sequence: parseInt(oldMatch[2], 10),
+    };
+  }
+
+  return null;
 }
 
 /**

@@ -7,6 +7,7 @@ import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { getReceiptsBucketName } from '../db/dynamo-client';
 import { DonationItem } from '../types';
+import { displayReceiptNo, parseReceiptNo } from '../utils/id-generator';
 import PDFDocument from 'pdfkit';
 import * as path from 'path';
 
@@ -60,7 +61,7 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
       const regY = doc.y;
       doc.font('Devanagari').text('रजि. क्र. अे/१२६/रत्नागिरी', 50, regY);
       doc.font('Devanagari').text('पावती क्रमांक', 400, regY, { continued: true });
-      doc.font('Helvetica-Bold').text(`: ${donation.receiptNo}`, { continued: false });
+      doc.font('Helvetica-Bold').text(`: ${displayReceiptNo(donation.receiptNo)}`, { continued: false });
 
       doc.moveDown(0.3);
       const locY = doc.y;
@@ -240,10 +241,29 @@ export async function createPDFReceipt(donation: DonationItem): Promise<Buffer> 
 }
 
 /**
+ * Resolve S3 key for a receipt.
+ * New format (NNNNN-YYYY-YY): receipts/YYYY-YY/NNNNN-YYYY-YY.pdf
+ * Old format (YYYY-NNNNN):     receipts/YYYY/YYYY-NNNNN.pdf  (backward compat)
+ */
+function s3KeyForReceipt(receiptNo: string): string {
+  const parsed = parseReceiptNo(receiptNo);
+  if (parsed) {
+    // New format: extract FY label from receipt number (e.g. "00071-2025-26" → "2025-26")
+    const newMatch = receiptNo.match(/^\d{5}-(\d{4}-\d{2})$/);
+    if (newMatch) {
+      return `receipts/${newMatch[1]}/${receiptNo}.pdf`;
+    }
+    // Old format: use calendar year
+    return `receipts/${parsed.year}/${receiptNo}.pdf`;
+  }
+  return `receipts/unknown/${receiptNo}.pdf`;
+}
+
+/**
  * Upload receipt to S3
- * Stores receipt in receipts/<year>/<receiptNo>.pdf
+ * New receipts: receipts/YYYY-YY/NNNNN-YYYY-YY.pdf
  *
- * @param receiptNo - Receipt number (e.g., "2025-00071")
+ * @param receiptNo - Receipt number
  * @param content - Receipt content (PDF buffer)
  * @param contentType - MIME type (default: application/pdf)
  * @returns S3 key where receipt was stored
@@ -254,8 +274,7 @@ export async function uploadReceiptToS3(
   contentType: string = 'application/pdf',
 ): Promise<string> {
   const bucketName = getReceiptsBucketName();
-  const year = receiptNo.split('-')[0];
-  const key = `receipts/${year}/${receiptNo}.pdf`;
+  const key = s3KeyForReceipt(receiptNo);
 
   try {
     await s3Client.send(
@@ -407,8 +426,7 @@ function numberToWordsMarathi(num: number): string {
  */
 export async function getReceiptDownloadUrl(receiptNo: string): Promise<string> {
   const bucketName = getReceiptsBucketName();
-  const year = receiptNo.split('-')[0];
-  const key = `receipts/${year}/${receiptNo}.pdf`;
+  const key = s3KeyForReceipt(receiptNo);
 
   try {
     const command = new GetObjectCommand({

@@ -32,7 +32,7 @@ export class PipelineStack extends cdk.Stack {
           // Run Lambda unit tests
           'cd TempleReceiptSystem/TempleReceiptSystemCDK/lambda/common && npm test && cd $CODEBUILD_SRC_DIR',
           // Build UI
-          'cd TempleReceiptSystem/TempleReceiptSystemCDK/ui && npm ci && npm run build && cd $CODEBUILD_SRC_DIR',
+          'cd ui && npm ci && npm run build && cd $CODEBUILD_SRC_DIR',
           // Install CDK deps and synth using pipeline entry point
           'cd TempleReceiptSystem/TempleReceiptSystemCDK && npm ci && npx cdk synth --app "npx ts-node --prefer-ts-exts bin/pipeline.ts"',
         ],

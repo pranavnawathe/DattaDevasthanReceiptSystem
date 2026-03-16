@@ -10,11 +10,9 @@ export interface UiStackProps extends cdk.StackProps {
 export class UiStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: UiStackProps) {
     super(scope, id, props);
-    const isTest = props.stageName === 'test';
 
     // S3 bucket for hosting the UI
     const uiBucket = new s3.Bucket(this, 'UiBucket', {
-      bucketName: isTest ? 'datta-devasthan-receipts-test' : 'datta-devasthan-receipts',
       websiteIndexDocument: 'index.html',
       websiteErrorDocument: 'index.html', // SPA routing fallback
       publicReadAccess: true,

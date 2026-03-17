@@ -9,8 +9,9 @@
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
     "moduleResolution": "node",
-    "outDir": "."
+    "rootDir": "..",
+    "outDir": ".."
   },
-  "include": ["*.ts"],
+  "include": ["index.ts"],
   "exclude": ["node_modules"]
 }

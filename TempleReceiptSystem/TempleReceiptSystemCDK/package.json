@@ -6,8 +6,9 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
+    "build:lambda": "cd lambda/receipts && npx tsc",
     "synth": "cdk synth",
-    "deploy": "cdk deploy",
+    "deploy": "npm run build:lambda && cdk deploy",
     "diff": "cdk diff",
     "test": "jest --passWithNoTests",
     "test:lambda": "cd lambda/common && npm test",

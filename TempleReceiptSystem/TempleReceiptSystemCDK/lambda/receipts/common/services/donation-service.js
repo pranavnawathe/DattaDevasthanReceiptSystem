@@ -6,7 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.createDonation = createDonation;
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 const dynamo_client_1 = require("../db/dynamo-client");
-const range_allocator_1 = require("./range-allocator");
+const counter_1 = require("../db/counter");
+const id_generator_1 = require("../utils/id-generator");
 const donor_resolver_1 = require("./donor-resolver");
 const types_1 = require("../types");
 const normalizers_1 = require("../utils/normalizers");
@@ -51,22 +52,11 @@ async function createDonation(orgId, request) {
     const { donorId, isNew, existingProfile } = donorResolution;
     // 5. Get donation date (use provided or today)
     const donationDate = (0, normalizers_1.normalizeDate)(request.date) || (0, normalizers_1.getTodayISO)();
-    // 6. Get current year for range lookup
-    const currentYear = new Date().getFullYear();
-    // 7. Allocate receipt number from active range
-    let allocation;
-    try {
-        allocation = await (0, range_allocator_1.allocateFromRange)(orgId, currentYear, donationDate, request.flexibleMode || false);
-    }
-    catch (error) {
-        if (error instanceof range_allocator_1.RangeAllocationError) {
-            throw new Error(`Receipt allocation failed: ${error.message} (${error.code})`);
-        }
-        throw error;
-    }
-    const receiptNo = allocation.receiptNo;
-    const rangeId = allocation.rangeId;
-    console.log(`Creating donation: ${receiptNo} from range ${rangeId} for donor: ${donorId} (isNew: ${isNew})`);
+    // 6. Get financial year for receipt numbering
+    const { year: financialYear } = (0, id_generator_1.getFinancialYear)(donationDate);
+    // 7. Allocate receipt number from sequential counter
+    const receiptNo = await (0, counter_1.getNextReceiptNumber)(orgId, financialYear);
+    console.log(`Creating donation: ${receiptNo} for donor: ${donorId} (isNew: ${isNew})`);
     // 7. Build donation item
     const donationItem = {
         PK: types_1.Keys.PK.org(orgId),
@@ -77,7 +67,6 @@ async function createDonation(orgId, request) {
         GSI2SK: types_1.Keys.GSI2.receipt(receiptNo),
         orgId,
         receiptNo,
-        rangeId,
         date: donationDate,
         donorId,
         donor: {
@@ -169,7 +158,7 @@ async function createDonation(orgId, request) {
                 },
             },
             // Add alias items for new donors
-            ...aliasItems.map(alias => ({
+            ...aliasItems.map((alias) => ({
                 Put: {
                     TableName: (0, dynamo_client_1.getTableName)(),
                     Item: alias,
@@ -222,3 +211,4 @@ function validatePayment(payment) {
         throw new Error(`Invalid payment mode. Must be one of: ${validModes.join(', ')}`);
     }
 }
+//# sourceMappingURL=donation-service.js.map

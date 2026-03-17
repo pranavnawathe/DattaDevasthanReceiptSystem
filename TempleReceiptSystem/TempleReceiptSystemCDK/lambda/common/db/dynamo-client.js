@@ -8,12 +8,12 @@ exports.docClient = void 0;
 exports.getTableName = getTableName;
 exports.getReceiptsBucketName = getReceiptsBucketName;
 exports.getExportsBucketName = getExportsBucketName;
-var client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
-var lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
+const client_dynamodb_1 = require("@aws-sdk/client-dynamodb");
+const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
 /**
  * Base DynamoDB client
  */
-var dynamoClient = new client_dynamodb_1.DynamoDBClient({
+const dynamoClient = new client_dynamodb_1.DynamoDBClient({
     region: process.env.AWS_REGION || 'ap-south-1',
 });
 /**
@@ -39,7 +39,7 @@ exports.docClient = lib_dynamodb_1.DynamoDBDocumentClient.from(dynamoClient, {
  * @returns DynamoDB table name
  */
 function getTableName() {
-    var tableName = process.env.DONATIONS_TABLE_NAME;
+    const tableName = process.env.DONATIONS_TABLE_NAME;
     if (!tableName) {
         throw new Error('DONATIONS_TABLE_NAME environment variable not set');
     }
@@ -50,7 +50,7 @@ function getTableName() {
  * @returns S3 bucket name for receipts
  */
 function getReceiptsBucketName() {
-    var bucketName = process.env.RECEIPTS_BUCKET_NAME;
+    const bucketName = process.env.RECEIPTS_BUCKET_NAME;
     if (!bucketName) {
         throw new Error('RECEIPTS_BUCKET_NAME environment variable not set');
     }
@@ -61,9 +61,10 @@ function getReceiptsBucketName() {
  * @returns S3 bucket name for exports
  */
 function getExportsBucketName() {
-    var bucketName = process.env.EXPORTS_BUCKET_NAME;
+    const bucketName = process.env.EXPORTS_BUCKET_NAME;
     if (!bucketName) {
         throw new Error('EXPORTS_BUCKET_NAME environment variable not set');
     }
     return bucketName;
 }
+//# sourceMappingURL=dynamo-client.js.map

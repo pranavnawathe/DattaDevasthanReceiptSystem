@@ -4,18 +4,7 @@
  * Matches the design document data model
  */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.Keys = exports.DonationPurpose = exports.PaymentMode = exports.RangeStatus = void 0;
-/**
- * Range status enum
- */
-var RangeStatus;
-(function (RangeStatus) {
-    RangeStatus["DRAFT"] = "draft";
-    RangeStatus["ACTIVE"] = "active";
-    RangeStatus["LOCKED"] = "locked";
-    RangeStatus["EXHAUSTED"] = "exhausted";
-    RangeStatus["ARCHIVED"] = "archived";
-})(RangeStatus || (exports.RangeStatus = RangeStatus = {}));
+exports.Keys = exports.DonationPurpose = exports.PaymentMode = void 0;
 /**
  * Payment modes
  */
@@ -50,23 +39,23 @@ var DonationPurpose;
  */
 exports.Keys = {
     PK: {
-        org: function (orgId) { return "ORG#".concat(orgId); },
+        org: (orgId) => `ORG#${orgId}`,
     },
     SK: {
-        receipt: function (receiptNo) { return "RCPT#".concat(receiptNo); },
-        donor: function (donorId) { return "DONOR#".concat(donorId); },
-        aliasPhone: function (phone) { return "ALIAS#PHONE#".concat(phone); },
-        aliasPAN: function (panHash) { return "ALIAS#PAN#".concat(panHash); },
-        aliasEmail: function (emailHash) { return "ALIAS#EMAIL#".concat(emailHash); },
-        counter: function (year) { return "COUNTER#RECEIPT#".concat(year); },
-        range: function (rangeId) { return "RANGE#".concat(rangeId); },
+        receipt: (receiptNo) => `RCPT#${receiptNo}`,
+        donor: (donorId) => `DONOR#${donorId}`,
+        aliasPhone: (phone) => `ALIAS#PHONE#${phone}`,
+        aliasPAN: (panHash) => `ALIAS#PAN#${panHash}`,
+        aliasEmail: (emailHash) => `ALIAS#EMAIL#${emailHash}`,
+        counter: (year) => `COUNTER#RECEIPT#${year}`,
     },
     GSI1: {
-        donor: function (donorId) { return "DONOR#".concat(donorId); },
-        donorReceipt: function (date, receiptNo) { return "DATE#".concat(date, "#RCPT#").concat(receiptNo); },
+        donor: (donorId) => `DONOR#${donorId}`,
+        donorReceipt: (date, receiptNo) => `DATE#${date}#RCPT#${receiptNo}`,
     },
     GSI2: {
-        date: function (date) { return "DATE#".concat(date); },
-        receipt: function (receiptNo) { return "RCPT#".concat(receiptNo); },
+        date: (date) => `DATE#${date}`,
+        receipt: (receiptNo) => `RCPT#${receiptNo}`,
     },
 };
+//# sourceMappingURL=types.js.map

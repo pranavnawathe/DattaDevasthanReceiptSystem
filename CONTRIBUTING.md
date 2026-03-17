@@ -70,9 +70,18 @@ Pushing to `main` triggers CodePipeline automatically:
 
 Use only when you need to bypass the pipeline (e.g. emergency fix already in prod state):
 
+| Command | When to use |
+|---|---|
+| `npm run deploy:api` | Lambda code changes only (fastest, ~30s) |
+| `npm run deploy` | Infrastructure changes (DynamoDB, S3, API routes, UI) |
+| `npm run deploy:pipeline` | Changes to the CodePipeline itself |
+
 ```bash
+# Most common — Lambda-only change
+npm run deploy:api
+
+# Full infra + lambda + UI
 npm run deploy
-# equivalent to: build:lambda + cdk deploy (using temple-backend.ts entry point)
 ```
 
 > ⚠️ Manual deploys skip the test stage. Prefer the pipeline for normal changes.

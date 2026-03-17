@@ -55,7 +55,7 @@ const handler = async (event) => {
         if (method === 'GET' && path === '/receipts') {
             const queryParams = event.queryStringParameters || {};
             console.log('Listing receipts with params:', queryParams);
-            const { date, startDate, endDate, rangeId, receiptNo, donorId, includeVoided, limit, nextToken, } = queryParams;
+            const { date, startDate, endDate, receiptNo, donorId, includeVoided, limit, nextToken, } = queryParams;
             const pagination = {
                 limit: limit ? parseInt(limit, 10) : undefined,
                 lastEvaluatedKey: nextToken,
@@ -73,11 +73,6 @@ const handler = async (event) => {
             // List by donor ID
             if (donorId) {
                 const result = await (0, receipt_listing_1.listReceiptsByDonor)(ORG_ID, donorId, pagination, includeVoidedFlag);
-                return json(200, { success: true, ...result });
-            }
-            // List by range ID
-            if (rangeId) {
-                const result = await (0, receipt_listing_1.listReceiptsByRange)(ORG_ID, rangeId, pagination, includeVoidedFlag);
                 return json(200, { success: true, ...result });
             }
             // List by date range
@@ -135,7 +130,7 @@ const handler = async (event) => {
         if (method === 'GET' && path.startsWith('/receipts/') && path.endsWith('/download')) {
             // Extract receipt number from path: /receipts/2025-00008/download
             const receiptNo = path.split('/')[2];
-            if (!receiptNo || !receiptNo.match(/^\d{4}-\d{5}$/)) {
+            if (!receiptNo || !receiptNo.match(/^(\d{5}-\d{4}-\d{2}|\d{4}-\d{5})$/)) {
                 return json(400, { success: false, error: 'Invalid receipt number format' });
             }
             console.log(`Generating download URL for receipt: ${receiptNo}`);
@@ -173,7 +168,6 @@ const handler = async (event) => {
                 format: exportRequest.format,
                 startDate: exportRequest.startDate,
                 endDate: exportRequest.endDate,
-                rangeId: exportRequest.rangeId,
                 includeVoided: exportRequest.includeVoided || false,
             });
             console.log(`✅ Export generated: ${result.fileName} (${result.recordCount} records)`);

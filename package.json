@@ -1,0 +1,14 @@
+{
+  "name": "datta-devasthan-receipt-system",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cd ui && npm run dev",
+    "build:ui": "cd ui && npm run build",
+    "build:lambda": "cd TempleReceiptSystem/TempleReceiptSystemCDK && npm run build:lambda",
+    "deploy": "cd TempleReceiptSystem/TempleReceiptSystemCDK && npm run deploy",
+    "deploy:pipeline": "cd TempleReceiptSystem/TempleReceiptSystemCDK && npm run deploy:pipeline",
+    "test": "cd TempleReceiptSystem/TempleReceiptSystemCDK && npm run test:all",
+    "install:all": "cd ui && npm install && cd ../TempleReceiptSystem/TempleReceiptSystemCDK && npm install && npm run install:lambda"
+  }
+}

@@ -8,7 +8,7 @@
     "watch": "tsc -w",
     "build:lambda": "cd lambda/receipts && npx tsc",
     "synth": "cdk synth",
-    "deploy": "npm run build:lambda && cdk deploy",
+    "deploy": "npm run build:lambda && cdk deploy FoundationStack TempleApiStack TempleUiStack",
     "diff": "cdk diff",
     "test": "jest --passWithNoTests",
     "test:lambda": "cd lambda/common && npm test",

@@ -29,6 +29,9 @@ export interface DonationItem {
   eligible80G: boolean;
   total: number;
   pdfKey?: string; // S3 key for PDF receipt
+  sankalp?: string; // Purpose/intention of the donation
+  visheshSankalp?: string; // Additional/special purpose
+  yajmanUpasthit?: string; // Whether/who the donor-performer is present
   createdAt: number; // Unix timestamp (ms)
   updatedAt?: number; // Unix timestamp (ms)
   createdBy?: string; // User ID who created
@@ -60,6 +63,8 @@ export interface DonorItem {
     count: number; // Number of donations
   };
   address?: AddressInfo;
+  gotra?: string; // Donor's gotra
+  postalAddress?: string; // Flat postal address for prasad dispatch
   meta: {
     createdAt: number; // Unix timestamp (ms)
     updatedAt: number;
@@ -104,6 +109,9 @@ export interface CreateReceiptRequest {
   payment: PaymentInfo;
   eligible80G?: boolean; // Default: true
   date?: string; // Optional override (default: today)
+  sankalp?: string;
+  visheshSankalp?: string;
+  yajmanUpasthit?: string;
 }
 
 /**
@@ -141,6 +149,8 @@ export interface DonorInfo {
   email?: string;
   pan?: string; // 10-char PAN (ABCDE1234F)
   address?: AddressInfo;
+  gotra?: string; // Donor's gotra (required for Dharmik donations)
+  postalAddress?: string; // Flat postal address string for prasad dispatch (required for Dharmik donations)
 }
 
 /**

@@ -80,6 +80,9 @@ async function createDonation(orgId, request) {
         payment: request.payment,
         eligible80G: request.eligible80G ?? true,
         total,
+        ...(request.sankalp && { sankalp: request.sankalp }),
+        ...(request.visheshSankalp && { visheshSankalp: request.visheshSankalp }),
+        ...(request.yajmanUpasthit && { yajmanUpasthit: request.yajmanUpasthit }),
         createdAt: startTime,
     };
     // 8. Build donor profile (new or updated)
@@ -211,4 +214,3 @@ function validatePayment(payment) {
         throw new Error(`Invalid payment mode. Must be one of: ${validModes.join(', ')}`);
     }
 }
-//# sourceMappingURL=donation-service.js.map

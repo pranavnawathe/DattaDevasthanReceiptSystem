@@ -58,4 +58,3 @@ exports.Keys = {
         receipt: (receiptNo) => `RCPT#${receiptNo}`,
     },
 };
-//# sourceMappingURL=types.js.map

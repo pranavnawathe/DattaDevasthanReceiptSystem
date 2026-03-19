@@ -174,4 +174,3 @@ function normalizeAmount(amount) {
     // Round to 2 decimal places
     return Math.round(num * 100) / 100;
 }
-//# sourceMappingURL=normalizers.js.map

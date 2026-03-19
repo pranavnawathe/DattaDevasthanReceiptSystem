@@ -121,7 +121,7 @@ function sanitizeForLogs(data) {
     }
     if (typeof data === 'object' && data !== null) {
         if (Array.isArray(data)) {
-            return data.map(item => sanitizeForLogs(item));
+            return data.map((item) => sanitizeForLogs(item));
         }
         const sanitized = {};
         for (const [key, value] of Object.entries(data)) {

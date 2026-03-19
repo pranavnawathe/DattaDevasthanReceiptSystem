@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import type { CreateReceiptRequest, CreateReceiptResponse, FormErrors, DonationCategory } from '../types';
-import { DONATION_CATEGORIES } from '../types';
-import { validateDonorInfo, validateBreakup, validatePayment } from '../utils/validators';
+import type { CreateReceiptRequest, CreateReceiptResponse, FormErrors, DharmikKarya } from '../types';
+import { DONATION_CATEGORIES, DHARMIK_KARYAS } from '../types';
+import { validateDonorInfo, validateBreakup, validatePayment, validateDharmikInfo } from '../utils/validators';
 import { formatCurrency, getTodayIST } from '../utils/formatters';
 import { api } from '../services/api';
 
@@ -22,13 +22,21 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
   // Donation breakup state
   const [breakup, setBreakup] = useState<Record<string, number>>({});
 
+  // Dharmik state
+  const [dharmikEnabled, setDharmikEnabled] = useState(false);
+  const [dharmikKarya, setDharmikKarya] = useState<DharmikKarya>('EKADASHANI');
+  const [gotra, setGotra] = useState('');
+  const [postalAddress, setPostalAddress] = useState('');
+  const [sankalp, setSankalp] = useState('');
+  const [visheshSankalp, setVisheshSankalp] = useState('');
+  const [yajmanUpasthit, setYajmanUpasthit] = useState('');
+
   // UI state
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const handleBreakupChange = (category: string, value: string) => {
-    // Handle empty string
     if (value === '' || value === null || value === undefined) {
       setBreakup(prev => {
         const updated = { ...prev };
@@ -48,10 +56,33 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
       return;
     }
 
-    setBreakup(prev => ({
-      ...prev,
-      [category]: amount
-    }));
+    setBreakup(prev => ({ ...prev, [category]: amount }));
+  };
+
+  const handleDharmikToggle = (checked: boolean) => {
+    setDharmikEnabled(checked);
+    if (checked) {
+      const karya = dharmikKarya;
+      setBreakup(prev => ({ ...prev, [`DHARMIK_${karya}`]: DHARMIK_KARYAS[karya].amount }));
+    } else {
+      setBreakup(prev => {
+        const updated = { ...prev };
+        Object.keys(updated).forEach(k => { if (k.startsWith('DHARMIK_')) delete updated[k]; });
+        return updated;
+      });
+    }
+  };
+
+  const handleDharmikKaryaChange = (newKarya: DharmikKarya) => {
+    const oldKey = `DHARMIK_${dharmikKarya}`;
+    const newKey = `DHARMIK_${newKarya}`;
+    setBreakup(prev => {
+      const updated = { ...prev };
+      delete updated[oldKey];
+      updated[newKey] = DHARMIK_KARYAS[newKarya].amount;
+      return updated;
+    });
+    setDharmikKarya(newKarya);
   };
 
   const calculateTotal = (): number => {
@@ -62,15 +93,16 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
     e.preventDefault();
     setSubmitError(null);
 
-    // Validate form
     const donorErrors = validateDonorInfo({ name, mobile, pan, email });
     const breakupError = validateBreakup(breakup);
     const paymentError = validatePayment({ mode: paymentMode, reference: paymentRef });
+    const dharmikErrors = dharmikEnabled ? validateDharmikInfo(gotra, postalAddress) : {};
 
     const allErrors: FormErrors = {
       ...donorErrors,
       ...(breakupError ? { breakup: breakupError } : {}),
       ...(paymentError ? { payment: paymentError } : {}),
+      ...dharmikErrors,
     };
 
     if (Object.keys(allErrors).length > 0) {
@@ -88,6 +120,8 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
           ...(mobile && { mobile }),
           ...(pan && { pan: pan.toUpperCase() }),
           ...(email && { email }),
+          ...(dharmikEnabled && gotra && { gotra: gotra.trim() }),
+          ...(dharmikEnabled && postalAddress && { postalAddress: postalAddress.trim() }),
         },
         breakup,
         payment: {
@@ -95,13 +129,14 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
           ...(paymentRef && { reference: paymentRef }),
         },
         date,
-        eligible80G: false, // Organization not eligible for 80G
+        eligible80G: false,
+        ...(dharmikEnabled && sankalp && { sankalp: sankalp.trim() }),
+        ...(dharmikEnabled && visheshSankalp && { visheshSankalp: visheshSankalp.trim() }),
+        ...(dharmikEnabled && yajmanUpasthit && { yajmanUpasthit: yajmanUpasthit.trim() }),
       };
 
       const response = await api.createReceipt(request);
       onSuccess(response);
-
-      // Reset form
       resetForm();
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : 'Failed to create receipt');
@@ -119,6 +154,13 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
     setPaymentMode('CASH');
     setPaymentRef('');
     setBreakup({});
+    setDharmikEnabled(false);
+    setDharmikKarya('EKADASHANI');
+    setGotra('');
+    setPostalAddress('');
+    setSankalp('');
+    setVisheshSankalp('');
+    setYajmanUpasthit('');
     setErrors({});
     setSubmitError(null);
   };
@@ -239,7 +281,8 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
               <span className="marathi">देणगी विभाजन</span> / Donation Breakup <span className="text-error">*</span>
             </label>
             <div className="space-y-2">
-              {(Object.keys(DONATION_CATEGORIES) as DonationCategory[]).map((category) => (
+              {/* General and Annadan */}
+              {(Object.keys(DONATION_CATEGORIES) as Array<keyof typeof DONATION_CATEGORIES>).map((category) => (
                 <div key={category} className="flex items-center gap-2">
                   <input
                     type="number"
@@ -253,6 +296,125 @@ export function DonationForm({ onSuccess }: DonationFormProps) {
                   <label className="text-sm text-gray-700">{DONATION_CATEGORIES[category]}</label>
                 </div>
               ))}
+
+              {/* Dharmik opt-in */}
+              <div className="space-y-2 pt-1">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="dharmikEnabled"
+                    checked={dharmikEnabled}
+                    onChange={(e) => handleDharmikToggle(e.target.checked)}
+                    className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
+                  />
+                  <label htmlFor="dharmikEnabled" className="text-sm font-medium text-gray-700">
+                    <span className="marathi">धार्मिक</span> / Dharmik
+                  </label>
+                </div>
+
+                {dharmikEnabled && (
+                  <div className="ml-6 space-y-3 border-l-2 border-primary border-opacity-30 pl-4">
+                    {/* Karya selector + fixed amount */}
+                    <div className="flex items-center gap-3">
+                      <select
+                        value={dharmikKarya}
+                        onChange={(e) => handleDharmikKaryaChange(e.target.value as DharmikKarya)}
+                        className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+                      >
+                        {(Object.keys(DHARMIK_KARYAS) as DharmikKarya[]).map((karya) => (
+                          <option key={karya} value={karya}>
+                            {DHARMIK_KARYAS[karya].label}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-sm font-semibold text-secondary">
+                        ₹ {DHARMIK_KARYAS[dharmikKarya].amount}
+                      </span>
+                    </div>
+
+                    {/* Gotra */}
+                    <div>
+                      <label htmlFor="gotra" className="block text-sm font-medium text-gray-700 mb-1">
+                        <span className="marathi">गोत्र</span> / Gotra <span className="text-error">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        id="gotra"
+                        value={gotra}
+                        onChange={(e) => setGotra(e.target.value)}
+                        className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-primary ${
+                          errors.gotra ? 'border-error' : 'border-gray-300'
+                        }`}
+                        placeholder="कश्यप / Kashyap"
+                      />
+                      {errors.gotra && <p className="text-error text-xs mt-1">{errors.gotra}</p>}
+                    </div>
+
+                    {/* Postal Address */}
+                    <div>
+                      <label htmlFor="postalAddress" className="block text-sm font-medium text-gray-700 mb-1">
+                        <span className="marathi">पत्ता</span> / Postal Address <span className="text-error">*</span>
+                      </label>
+                      <textarea
+                        id="postalAddress"
+                        value={postalAddress}
+                        onChange={(e) => setPostalAddress(e.target.value)}
+                        rows={3}
+                        className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-primary focus:border-primary resize-none ${
+                          errors.postalAddress ? 'border-error' : 'border-gray-300'
+                        }`}
+                        placeholder="123, मेन रोड, कोंडगांव, रत्नागिरी - 415640"
+                      />
+                      {errors.postalAddress && <p className="text-error text-xs mt-1">{errors.postalAddress}</p>}
+                    </div>
+
+                    {/* Sankalp */}
+                    <div>
+                      <label htmlFor="sankalp" className="block text-sm font-medium text-gray-700 mb-1">
+                        <span className="marathi">सन्कल्प</span> / Sankalp
+                      </label>
+                      <input
+                        type="text"
+                        id="sankalp"
+                        value={sankalp}
+                        onChange={(e) => setSankalp(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+                        placeholder="गुरुसेवा"
+                      />
+                    </div>
+
+                    {/* Vishesh Sankalp */}
+                    <div>
+                      <label htmlFor="visheshSankalp" className="block text-sm font-medium text-gray-700 mb-1">
+                        <span className="marathi">विशेष सन्कल्प</span> / Vishesh Sankalp
+                      </label>
+                      <input
+                        type="text"
+                        id="visheshSankalp"
+                        value={visheshSankalp}
+                        onChange={(e) => setVisheshSankalp(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+                        placeholder=""
+                      />
+                    </div>
+
+                    {/* Yajman Upasthit */}
+                    <div>
+                      <label htmlFor="yajmanUpasthit" className="block text-sm font-medium text-gray-700 mb-1">
+                        <span className="marathi">यजमान उपस्थित</span> / Yajman Upasthit
+                      </label>
+                      <input
+                        type="text"
+                        id="yajmanUpasthit"
+                        value={yajmanUpasthit}
+                        onChange={(e) => setYajmanUpasthit(e.target.value)}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-primary"
+                        placeholder=""
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
             {errors.breakup && <p className="text-error text-xs mt-1">{errors.breakup}</p>}
           </div>

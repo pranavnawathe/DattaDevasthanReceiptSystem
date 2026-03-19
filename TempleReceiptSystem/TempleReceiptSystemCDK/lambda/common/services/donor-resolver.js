@@ -104,4 +104,3 @@ function validateDonorInfo(donorInfo) {
         throw new Error('Invalid email format');
     }
 }
-//# sourceMappingURL=donor-resolver.js.map

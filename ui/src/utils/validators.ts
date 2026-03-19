@@ -67,6 +67,17 @@ export function validateBreakup(breakup: Record<string, number>): string | null 
   return null;
 }
 
+export function validateDharmikInfo(gotra: string, postalAddress: string): FormErrors {
+  const errors: FormErrors = {};
+  if (!gotra || gotra.trim().length === 0) {
+    errors.gotra = 'Gotra is required for Dharmik donations';
+  }
+  if (!postalAddress || postalAddress.trim().length === 0) {
+    errors.postalAddress = 'Postal address is required for Dharmik donations';
+  }
+  return errors;
+}
+
 export function validatePayment(payment: PaymentInfo): string | null {
   if (!payment.mode) {
     return 'Payment mode is required';

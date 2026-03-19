@@ -259,4 +259,3 @@ function generateDateRange(startDate, endDate) {
     }
     return dates;
 }
-//# sourceMappingURL=receipt-listing.js.map

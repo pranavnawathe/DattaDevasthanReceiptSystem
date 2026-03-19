@@ -32,6 +32,7 @@ async function createDonation(orgId, request) {
     (0, donor_resolver_1.validateDonorInfo)(request.donor);
     validateBreakup(request.breakup);
     validatePayment(request.payment);
+    validateDharmikInfo(request.donor, request.breakup);
     // 2. Normalize donor information
     const normalizedPhone = (0, normalizers_1.normalizePhone)(request.donor.mobile);
     const normalizedPAN = (0, normalizers_1.normalizePAN)(request.donor.pan);
@@ -75,11 +76,16 @@ async function createDonation(orgId, request) {
             email: normalizedEmail || undefined,
             pan: normalizedPAN ? (0, crypto_1.maskPAN)(normalizedPAN) : undefined,
             address: request.donor.address,
+            gotra: request.donor.gotra,
+            postalAddress: request.donor.postalAddress,
         },
         breakup: request.breakup,
         payment: request.payment,
         eligible80G: request.eligible80G ?? true,
         total,
+        ...(request.sankalp && { sankalp: request.sankalp }),
+        ...(request.visheshSankalp && { visheshSankalp: request.visheshSankalp }),
+        ...(request.yajmanUpasthit && { yajmanUpasthit: request.yajmanUpasthit }),
         createdAt: startTime,
     };
     // 8. Build donor profile (new or updated)
@@ -106,6 +112,8 @@ async function createDonation(orgId, request) {
             count: donationCount,
         },
         address: request.donor.address,
+        gotra: request.donor.gotra ?? existingProfile?.gotra,
+        postalAddress: request.donor.postalAddress ?? existingProfile?.postalAddress,
         meta: {
             createdAt: existingProfile?.meta.createdAt || startTime,
             updatedAt: startTime,
@@ -200,6 +208,21 @@ function validateBreakup(breakup) {
     }
 }
 /**
+ * Validate Dharmik-specific fields: gotra and postalAddress are required
+ * when any DHARMIK_* key is present in the breakup
+ */
+function validateDharmikInfo(donor, breakup) {
+    const hasDharmik = Object.keys(breakup).some((k) => k.startsWith('DHARMIK_'));
+    if (!hasDharmik)
+        return;
+    if (!donor.gotra || donor.gotra.trim().length === 0) {
+        throw new Error('Gotra is required for Dharmik donations');
+    }
+    if (!donor.postalAddress || donor.postalAddress.trim().length === 0) {
+        throw new Error('Postal address is required for Dharmik donations (for prasad dispatch)');
+    }
+}
+/**
  * Validate payment information
  */
 function validatePayment(payment) {
@@ -211,4 +234,3 @@ function validatePayment(payment) {
         throw new Error(`Invalid payment mode. Must be one of: ${validModes.join(', ')}`);
     }
 }
-//# sourceMappingURL=donation-service.js.map

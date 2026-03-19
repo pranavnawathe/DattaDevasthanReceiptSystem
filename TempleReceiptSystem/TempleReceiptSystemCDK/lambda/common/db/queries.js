@@ -214,4 +214,3 @@ function generateDateRange(startDate, endDate) {
     }
     return dates;
 }
-//# sourceMappingURL=queries.js.map

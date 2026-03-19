@@ -2,6 +2,59 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Spec-Driven Development
+
+**All non-trivial features must have a spec before implementation begins.**
+
+### When to write a spec
+
+Write a spec for any change that involves:
+- New UI behavior or new form interactions
+- API contract changes (new endpoints, changed request/response shapes)
+- DynamoDB schema or data model changes
+- Business logic changes (receipt numbering, category definitions, validation rules)
+- Multi-file changes across frontend and backend
+
+Skip the spec for: bug fixes, typo/copy changes, minor style tweaks, single-file refactors with no behavioral change.
+
+### Spec location and naming
+
+All specs live in `docs/` and are named `SPEC-<feature-slug>.md` (e.g., `SPEC-donation-breakup-simplification.md`).
+
+### Spec template
+
+A spec must include:
+
+```markdown
+# Specification: <Feature Name>
+
+## Overview
+One paragraph: what is changing and why.
+
+## <Domain-specific sections>
+Describe the new behavior, data model, UI interactions, API changes, etc.
+Include before/after comparisons where helpful (tables, diff blocks).
+
+## Files to Change
+Table listing every file that changes and a one-line description of the change.
+Call out both `.ts` source files and compiled `.js` outputs when both must be updated.
+
+## Testing Plan
+Numbered list of build checks, unit tests, and manual verification steps.
+```
+
+### Workflow
+
+1. **Spec first** — write and review the spec in `docs/SPEC-<slug>.md`
+2. **Implement** — follow the spec; do not deviate without updating the spec
+3. **Test** — run every step in the Testing Plan before considering the feature done
+
+### For Claude Code
+
+- When asked to implement a feature: check if a spec exists in `docs/`. If it does, follow it. If it doesn't, write the spec and ask the user to review it before writing code.
+- When a user describes a feature verbally (as in a chat message), turn it into a spec first.
+- The spec is the source of truth. If implementation reveals an issue with the spec, update the spec first, then fix the code.
+
 ## Project Overview
 
 **Datta Devasthan Receipt System** is a full-stack donation management and e-receipt system for **श्री दत्त देवस्थान कोंडगांव (साखरपा)**, a temple in Maharashtra, India. Committee members use it to record donations and generate bilingual (Marathi + English) PDF receipts.

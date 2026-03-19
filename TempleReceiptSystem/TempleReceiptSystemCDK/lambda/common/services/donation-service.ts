@@ -49,6 +49,7 @@ export async function createDonation(
   validateDonorInfo(request.donor);
   validateBreakup(request.breakup);
   validatePayment(request.payment);
+  validateDharmikInfo(request.donor, request.breakup);
 
   // 2. Normalize donor information
   const normalizedPhone = normalizePhone(request.donor.mobile);
@@ -101,11 +102,16 @@ export async function createDonation(
       email: normalizedEmail || undefined,
       pan: normalizedPAN ? maskPAN(normalizedPAN) : undefined,
       address: request.donor.address,
+      gotra: request.donor.gotra,
+      postalAddress: request.donor.postalAddress,
     },
     breakup: request.breakup,
     payment: request.payment,
     eligible80G: request.eligible80G ?? true,
     total,
+    ...(request.sankalp && { sankalp: request.sankalp }),
+    ...(request.visheshSankalp && { visheshSankalp: request.visheshSankalp }),
+    ...(request.yajmanUpasthit && { yajmanUpasthit: request.yajmanUpasthit }),
     createdAt: startTime,
   };
 
@@ -134,6 +140,8 @@ export async function createDonation(
       count: donationCount,
     },
     address: request.donor.address,
+    gotra: request.donor.gotra ?? existingProfile?.gotra,
+    postalAddress: request.donor.postalAddress ?? existingProfile?.postalAddress,
     meta: {
       createdAt: existingProfile?.meta.createdAt || startTime,
       updatedAt: startTime,
@@ -237,6 +245,22 @@ function validateBreakup(breakup: Record<string, number>): void {
     if (normalized === null || normalized <= 0) {
       throw new Error(`Invalid amount for ${purpose}: ${amount}`);
     }
+  }
+}
+
+/**
+ * Validate Dharmik-specific fields: gotra and postalAddress are required
+ * when any DHARMIK_* key is present in the breakup
+ */
+function validateDharmikInfo(donor: { gotra?: string; postalAddress?: string }, breakup: Record<string, number>): void {
+  const hasDharmik = Object.keys(breakup).some((k) => k.startsWith('DHARMIK_'));
+  if (!hasDharmik) return;
+
+  if (!donor.gotra || donor.gotra.trim().length === 0) {
+    throw new Error('Gotra is required for Dharmik donations');
+  }
+  if (!donor.postalAddress || donor.postalAddress.trim().length === 0) {
+    throw new Error('Postal address is required for Dharmik donations (for prasad dispatch)');
   }
 }
 

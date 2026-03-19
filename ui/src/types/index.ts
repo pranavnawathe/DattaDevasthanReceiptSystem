@@ -4,6 +4,8 @@ export interface DonorInfo {
   mobile?: string;
   pan?: string;
   email?: string;
+  gotra?: string;
+  postalAddress?: string;
 }
 
 export interface PaymentInfo {
@@ -17,6 +19,9 @@ export interface CreateReceiptRequest {
   payment: PaymentInfo;
   date?: string;
   eligible80G?: boolean;
+  sankalp?: string;
+  visheshSankalp?: string;
+  yajmanUpasthit?: string;
 }
 
 // API Response Types
@@ -44,18 +49,23 @@ export interface FormErrors {
   email?: string;
   breakup?: string;
   payment?: string;
+  gotra?: string;
+  postalAddress?: string;
 }
 
 // Donation Categories
 export const DONATION_CATEGORIES = {
-  TEMPLE_GENERAL: 'मंदिर सामान्य / Temple General',
-  EDUCATION: 'शिक्षण / Education',
-  ANNADAAN: 'अन्नदान / Annadaan',
-  GAUSHALA: 'गौशाळा / Gaushala',
-  CONSTRUCTION: 'बांधकाम / Construction',
-  FESTIVAL: 'उत्सव / Festival',
-  OTHER: 'इतर / Other',
+  GENERAL: 'सामान्य / General',
+  ANNADAN: 'अन्नदान / Annadan',
 } as const;
 
 export type DonationCategory = keyof typeof DONATION_CATEGORIES;
 
+// Dharmik Karyas with predefined amounts
+export const DHARMIK_KARYAS = {
+  EKADASHANI: { label: 'एकादशनी / Ekadashani', amount: 201 },
+  LAGHURUDRA: { label: 'लघुरुद्र / Laghurudra', amount: 501 },
+  ABHISHEK: { label: 'अभिषेक / Abhishek', amount: 101 },
+} as const;
+
+export type DharmikKarya = keyof typeof DHARMIK_KARYAS;

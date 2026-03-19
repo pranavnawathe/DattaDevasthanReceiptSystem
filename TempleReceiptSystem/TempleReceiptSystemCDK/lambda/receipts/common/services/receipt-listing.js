@@ -7,7 +7,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.listReceiptsByDate = listReceiptsByDate;
 exports.listReceiptsByDateRange = listReceiptsByDateRange;
 exports.listReceiptsByDonor = listReceiptsByDonor;
-exports.listReceiptsByRange = listReceiptsByRange;
 exports.getReceiptByNumber = getReceiptByNumber;
 exports.searchDonorByIdentifier = searchDonorByIdentifier;
 const lib_dynamodb_1 = require("@aws-sdk/lib-dynamodb");
@@ -151,46 +150,6 @@ async function listReceiptsByDonor(orgId, donorId, params, includeVoided = false
         items,
         nextToken,
         count: items.length,
-    };
-}
-/**
- * List receipts from a specific range
- * Queries all receipts and filters by rangeId
- *
- * @param orgId - Organization ID
- * @param rangeId - Range ID (e.g., "2025-H")
- * @param params - Pagination parameters
- * @param includeVoided - Include voided receipts
- * @returns Paginated list of receipts
- */
-async function listReceiptsByRange(orgId, rangeId, params, includeVoided = false) {
-    const limit = Math.min(params?.limit || 50, 100);
-    const queryParams = {
-        TableName: (0, dynamo_client_1.getTableName)(),
-        KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
-        ExpressionAttributeValues: {
-            ':pk': types_1.Keys.PK.org(orgId),
-            ':sk': 'RCPT#',
-        },
-        ScanIndexForward: false, // Sort descending
-    };
-    if (params?.lastEvaluatedKey) {
-        queryParams.ExclusiveStartKey = JSON.parse(Buffer.from(params.lastEvaluatedKey, 'base64').toString());
-    }
-    const result = await dynamo_client_1.docClient.send(new lib_dynamodb_1.QueryCommand(queryParams));
-    let items = (result.Items || []);
-    // Filter by rangeId
-    items = items.filter((item) => item.rangeId === rangeId);
-    // Filter voided if needed
-    if (!includeVoided) {
-        items = items.filter((item) => !item.updatedAt || item.pdfKey);
-    }
-    // Apply limit
-    const paginatedItems = items.slice(0, limit);
-    return {
-        items: paginatedItems,
-        nextToken: undefined, // Simplified
-        count: paginatedItems.length,
     };
 }
 /**

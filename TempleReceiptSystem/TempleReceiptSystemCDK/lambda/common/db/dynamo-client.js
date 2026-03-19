@@ -67,4 +67,3 @@ function getExportsBucketName() {
     }
     return bucketName;
 }
-//# sourceMappingURL=dynamo-client.js.map

@@ -30,28 +30,48 @@ const TALLY_CSV_HEADERS = [
 async function generateExport(orgId, options) {
     // Validate dates
     validateDateRange(options.startDate, options.endDate);
-    // Fetch all receipts in date range
+    // Fetch all receipts in date range by breaking into chunks if needed
     const receipts = [];
-    let nextToken;
-    do {
-        const result = await (0, receipt_listing_1.listReceiptsByDateRange)(orgId, options.startDate, options.endDate, { limit: 100, lastEvaluatedKey: nextToken }, options.includeVoided || false);
-        receipts.push(...result.items);
-        nextToken = result.nextToken;
-    } while (nextToken);
-    // Filter by range if specified
-    const filteredReceipts = options.rangeId
-        ? receipts.filter((r) => r.rangeId === options.rangeId)
-        : receipts;
+    // For ranges > 31 days, break into 30-day chunks to avoid receipt-listing limit
+    const start = new Date(options.startDate);
+    const end = new Date(options.endDate);
+    const daysDiff = Math.floor((end.getTime() - start.getTime()) / (24 * 60 * 60 * 1000));
+    if (daysDiff <= 31) {
+        // Single query for small ranges
+        let nextToken;
+        do {
+            const result = await (0, receipt_listing_1.listReceiptsByDateRange)(orgId, options.startDate, options.endDate, { limit: 100, lastEvaluatedKey: nextToken }, options.includeVoided || false);
+            receipts.push(...result.items);
+            nextToken = result.nextToken;
+        } while (nextToken);
+    }
+    else {
+        // Break into 30-day chunks for large ranges
+        let currentStart = new Date(options.startDate);
+        while (currentStart <= end) {
+            const chunkEnd = new Date(currentStart);
+            chunkEnd.setDate(chunkEnd.getDate() + 30);
+            const chunkEndDate = chunkEnd > end ? options.endDate : chunkEnd.toISOString().split('T')[0];
+            const chunkStartDate = currentStart.toISOString().split('T')[0];
+            let nextToken;
+            do {
+                const result = await (0, receipt_listing_1.listReceiptsByDateRange)(orgId, chunkStartDate, chunkEndDate, { limit: 100, lastEvaluatedKey: nextToken }, options.includeVoided || false);
+                receipts.push(...result.items);
+                nextToken = result.nextToken;
+            } while (nextToken);
+            currentStart.setDate(currentStart.getDate() + 31);
+        }
+    }
     // Generate CSV
     if (options.format === 'csv') {
-        const csvContent = generateCSV(filteredReceipts);
+        const csvContent = generateCSV(receipts);
         const fileName = generateFileName(options, 'csv');
         return {
             success: true,
             format: 'csv',
             fileName,
             content: csvContent,
-            recordCount: filteredReceipts.length,
+            recordCount: receipts.length,
             dateRange: {
                 start: options.startDate,
                 end: options.endDate,
@@ -116,12 +136,9 @@ function escapeCSVField(field) {
  * Generate file name based on export options
  */
 function generateFileName(options, extension) {
-    const { startDate, endDate, rangeId } = options;
-    const dateStr = startDate === endDate
-        ? startDate
-        : `${startDate}_to_${endDate}`;
-    const rangeStr = rangeId ? `_${rangeId}` : '';
-    return `receipts_export_${dateStr}${rangeStr}.${extension}`;
+    const { startDate, endDate } = options;
+    const dateStr = startDate === endDate ? startDate : `${startDate}_to_${endDate}`;
+    return `receipts_export_${dateStr}.${extension}`;
 }
 /**
  * Validate date range

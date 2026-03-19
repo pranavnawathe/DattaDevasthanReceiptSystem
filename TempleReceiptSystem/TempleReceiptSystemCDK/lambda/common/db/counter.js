@@ -129,4 +129,3 @@ async function resetCounter(orgId, year, newValue = 0) {
     };
     await dynamo_client_1.docClient.send(new PutCommand(params));
 }
-//# sourceMappingURL=counter.js.map

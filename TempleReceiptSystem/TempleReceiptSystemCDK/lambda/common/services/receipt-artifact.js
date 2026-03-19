@@ -112,6 +112,40 @@ async function createPDFReceipt(donation) {
                 .moveTo(50, nameY + 15)
                 .lineTo(545, nameY + 15)
                 .stroke();
+            // Gotra and postal address (only for Dharmik donations)
+            if (donation.donor.gotra || donation.donor.postalAddress) {
+                doc.moveDown(0.5);
+                if (donation.donor.gotra) {
+                    doc.fontSize(9).font('Devanagari').fillColor('#000');
+                    doc.text('गोत्र: ', 50, doc.y, { continued: true });
+                    doc.font('Helvetica').text(donation.donor.gotra);
+                }
+                if (donation.donor.postalAddress) {
+                    doc.fontSize(9).font('Devanagari').fillColor('#000');
+                    doc.text('पत्ता: ', 50, doc.y, { continued: true });
+                    doc.font('Helvetica').text(donation.donor.postalAddress);
+                }
+            }
+            // Sankalpa block (only for Dharmik donations)
+            const hasDharmik = Object.keys(donation.breakup).some((k) => k.startsWith('DHARMIK'));
+            if (hasDharmik) {
+                doc.moveDown(0.8);
+                doc.fontSize(9).font('Devanagari').fillColor('#000');
+                doc.text(`आपणाकडून या दिनी - ${donation.date}`, 50, doc.y);
+                const labelX = 50;
+                const valueX = 175;
+                const lineGap = 16;
+                let rowY = doc.y + 6;
+                doc.font('Devanagari').text('सन्कल्प        :', labelX, rowY);
+                doc.font('Helvetica').text(donation.sankalp || '', valueX, rowY);
+                rowY += lineGap;
+                doc.font('Devanagari').text('विशेष सन्कल्प  :', labelX, rowY);
+                doc.font('Helvetica').text(donation.visheshSankalp || '', valueX, rowY);
+                rowY += lineGap;
+                doc.font('Devanagari').text('यजमान उपस्थित :', labelX, rowY);
+                doc.font('Helvetica').text(donation.yajmanUpasthit || '', valueX, rowY);
+                doc.y = rowY + lineGap;
+            }
             doc.moveDown(0.8);
             // "यांजकडून खालील तपशीलाप्रमाणे रक्कम मिळाली."
             doc
@@ -144,50 +178,63 @@ async function createPDFReceipt(donation) {
             const col2X = 370;
             const tableWidth = 495;
             const rowHeight = 30;
-            const categories = ['कार्यम निधी', 'उत्सव देणगी', 'धार्मिक कार्य', 'अन्नदान', 'इतर'];
+            // Build 3-row table dynamically from breakup
+            // Legacy key fallback for old receipts
+            const legacyMap = {
+                TEMPLE_GENERAL: 'GENERAL',
+                ANNADAAN: 'ANNADAN',
+                POOJA: 'DHARMIK',
+                FESTIVAL: 'GENERAL',
+                OTHER: 'GENERAL',
+            };
+            // Normalise breakup keys: map legacy keys to new keys
+            const normalisedBreakup = {};
+            for (const [key, amt] of Object.entries(donation.breakup)) {
+                const mapped = legacyMap[key] || key;
+                normalisedBreakup[mapped] = (normalisedBreakup[mapped] || 0) + amt;
+            }
+            // Find which Dharmik karya is present (if any)
+            const dharmikLabelMap = {
+                DHARMIK_EKADASHANI: 'धार्मिक - एकादशनी',
+                DHARMIK_LAGHURUDRA: 'धार्मिक - लघुरुद्र',
+                DHARMIK_ABHISHEK: 'धार्मिक - अभिषेक',
+                DHARMIK: 'धार्मिक कार्य', // legacy fallback
+            };
+            const dharmikKey = Object.keys(normalisedBreakup).find((k) => k.startsWith('DHARMIK'));
+            const dharmikLabel = dharmikKey ? (dharmikLabelMap[dharmikKey] || 'धार्मिक कार्य') : 'धार्मिक कार्य';
+            const categoryRows = [
+                { label: 'सामान्य', key: 'GENERAL' },
+                { label: 'अन्नदान', key: 'ANNADAN' },
+                { label: dharmikLabel, key: dharmikKey || '' },
+            ];
             // Draw table headers
             doc.fontSize(10).font('Devanagari').fillColor('#000');
             // Draw outer border
-            doc.rect(col1X, tableStartY, tableWidth, rowHeight * (categories.length + 1)).stroke();
+            doc.rect(col1X, tableStartY, tableWidth, rowHeight * (categoryRows.length + 1)).stroke();
             // Header row
             doc.rect(col1X, tableStartY, tableWidth / 2 - 10, rowHeight).stroke();
             doc.rect(col1X + tableWidth / 2 - 10, tableStartY, tableWidth / 2 + 10, rowHeight).stroke();
             doc.text('तपशील', col1X + 10, tableStartY + 10);
             doc.text('रक्कम रुपये', col2X + 10, tableStartY + 10);
-            // Map donation breakup to categories
-            const categoryMap = {
-                TEMPLE_GENERAL: 'कार्यम निधी',
-                FESTIVAL: 'उत्सव देणगी',
-                POOJA: 'धार्मिक कार्य',
-                ANNADAAN: 'अन्नदान',
-                OTHER: 'इतर',
-            };
             // Draw category rows
-            categories.forEach((category, index) => {
+            categoryRows.forEach(({ label, key }, index) => {
                 const rowY = tableStartY + rowHeight * (index + 1);
                 // Draw row lines
                 doc.rect(col1X, rowY, tableWidth / 2 - 10, rowHeight).stroke();
                 doc.rect(col1X + tableWidth / 2 - 10, rowY, tableWidth / 2 + 10, rowHeight).stroke();
                 // Category name
-                doc.font('Devanagari').text(category, col1X + 10, rowY + 10);
-                // Find matching amount
-                let amount = '';
-                for (const [purpose, amt] of Object.entries(donation.breakup)) {
-                    if (categoryMap[purpose] === category) {
-                        amount = `${amt.toFixed(2)}`;
-                        break;
-                    }
-                }
-                // Draw dots or amount
-                if (amount) {
-                    doc.font('Helvetica').text(amount, col2X + 10, rowY + 10);
+                doc.font('Devanagari').text(label, col1X + 10, rowY + 10);
+                // Amount from normalised breakup
+                const amt = key ? normalisedBreakup[key] : undefined;
+                if (amt !== undefined) {
+                    doc.font('Helvetica').text(amt.toFixed(2), col2X + 10, rowY + 10);
                 }
                 else {
                     doc.font('Helvetica').text('.........', col2X + 10, rowY + 10);
                 }
             });
             // Add total row with bold styling
-            const totalRowY = tableStartY + rowHeight * (categories.length + 1);
+            const totalRowY = tableStartY + rowHeight * (categoryRows.length + 1);
             // Draw total row border - make it darker/bolder
             doc.strokeColor('#000').lineWidth(1.5);
             doc.rect(col1X, totalRowY, tableWidth / 2 - 10, rowHeight).stroke();
@@ -196,7 +243,8 @@ async function createPDFReceipt(donation) {
             doc.fontSize(11).font('Devanagari').fillColor('#000');
             doc.text('एकूण', col1X + 10, totalRowY + 10, { continued: true });
             doc.font('Helvetica-Bold').text(' / Total');
-            doc.font('Helvetica-Bold').text(`₹ ${donation.total.toFixed(2)}`, col2X + 10, totalRowY + 10);
+            doc.font('Devanagari').text('₹ ', col2X + 10, totalRowY + 10, { continued: true });
+            doc.font('Helvetica-Bold').text(donation.total.toFixed(2));
             doc.y = totalRowY + rowHeight + 10;
             doc.moveDown(0.8);
             // Amount in words (अक्षरी रक्कम रु.)
@@ -408,4 +456,3 @@ async function getReceiptDownloadUrl(receiptNo) {
         throw new Error(`Failed to generate download URL: ${error.message}`);
     }
 }
-//# sourceMappingURL=receipt-artifact.js.map

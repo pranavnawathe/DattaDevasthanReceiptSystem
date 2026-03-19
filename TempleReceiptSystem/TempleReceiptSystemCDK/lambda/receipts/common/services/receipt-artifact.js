@@ -47,6 +47,7 @@ exports.getReceiptDownloadUrl = getReceiptDownloadUrl;
 const client_s3_1 = require("@aws-sdk/client-s3");
 const s3_request_presigner_1 = require("@aws-sdk/s3-request-presigner");
 const dynamo_client_1 = require("../db/dynamo-client");
+const id_generator_1 = require("../utils/id-generator");
 const pdfkit_1 = __importDefault(require("pdfkit"));
 const path = __importStar(require("path"));
 const s3Client = new client_s3_1.S3Client({ region: process.env.AWS_REGION || 'ap-south-1' });
@@ -90,7 +91,7 @@ async function createPDFReceipt(donation) {
             const regY = doc.y;
             doc.font('Devanagari').text('रजि. क्र. अे/१२६/रत्नागिरी', 50, regY);
             doc.font('Devanagari').text('पावती क्रमांक', 400, regY, { continued: true });
-            doc.font('Helvetica-Bold').text(`: ${donation.receiptNo}`, { continued: false });
+            doc.font('Helvetica-Bold').text(`: ${(0, id_generator_1.displayReceiptNo)(donation.receiptNo)}`, { continued: false });
             doc.moveDown(0.3);
             const locY = doc.y;
             doc.font('Devanagari').text('ता. संगमेश्वर, जि. रत्नागिरी', 50, locY);
@@ -98,12 +99,7 @@ async function createPDFReceipt(donation) {
             doc.font('Helvetica-Bold').text(`: ${donation.date}`, { continued: false });
             doc.moveDown(0.8);
             // Horizontal line
-            doc
-                .strokeColor('#8B0000')
-                .lineWidth(1.5)
-                .moveTo(50, doc.y)
-                .lineTo(545, doc.y)
-                .stroke();
+            doc.strokeColor('#8B0000').lineWidth(1.5).moveTo(50, doc.y).lineTo(545, doc.y).stroke();
             doc.moveDown(0.5);
             // Donor name section
             doc.fontSize(10).fillColor('#000');
@@ -112,19 +108,44 @@ async function createPDFReceipt(donation) {
             // Add donor name with underline
             const nameY = doc.y;
             doc.font('Devanagari').text(donation.donor.name, 50, nameY);
-            doc.moveTo(50, nameY + 15).lineTo(545, nameY + 15).stroke();
+            doc
+                .moveTo(50, nameY + 15)
+                .lineTo(545, nameY + 15)
+                .stroke();
+            // Sankalpa block (only for Dharmik donations)
+            const hasDharmik = Object.keys(donation.breakup).some((k) => k.startsWith('DHARMIK'));
+            if (hasDharmik) {
+                doc.moveDown(0.8);
+                doc.fontSize(9).font('Devanagari').fillColor('#000');
+                doc.text(`आपणाकडून या दिनी - ${donation.date}`, 50, doc.y);
+                const labelX = 50;
+                const valueX = 175;
+                const lineGap = 16;
+                let rowY = doc.y + 6;
+                doc.font('Devanagari').text('सन्कल्प        :', labelX, rowY);
+                doc.font('Helvetica').text(donation.sankalp || '', valueX, rowY);
+                rowY += lineGap;
+                doc.font('Devanagari').text('विशेष सन्कल्प  :', labelX, rowY);
+                doc.font('Helvetica').text(donation.visheshSankalp || '', valueX, rowY);
+                rowY += lineGap;
+                doc.font('Devanagari').text('यजमान उपस्थित :', labelX, rowY);
+                doc.font('Helvetica').text(donation.yajmanUpasthit || '', valueX, rowY);
+                doc.y = rowY + lineGap;
+            }
             doc.moveDown(0.8);
             // "यांजकडून खालील तपशीलाप्रमाणे रक्कम मिळाली."
-            doc.font('Devanagari').fontSize(10)
+            doc
+                .font('Devanagari')
+                .fontSize(10)
                 .text('यांजकडून खालील तपशीलाप्रमाणे रक्कम मिळाली.', 50, doc.y);
             doc.moveDown(0.5);
             // Payment method field
             const paymentMethodMap = {
-                'CASH': 'रोख',
-                'UPI': 'यूपीआय',
-                'CHEQUE': 'धनादेश',
-                'NEFT': 'एनईएफटी',
-                'IMPS': 'आयएमपीएस',
+                CASH: 'रोख',
+                UPI: 'यूपीआय',
+                CHEQUE: 'धनादेश',
+                NEFT: 'एनईएफटी',
+                IMPS: 'आयएमपीएस',
             };
             const modeString = String(donation.payment.mode);
             const paymentMethod = paymentMethodMap[modeString] || modeString;
@@ -143,13 +164,7 @@ async function createPDFReceipt(donation) {
             const col2X = 370;
             const tableWidth = 495;
             const rowHeight = 30;
-            const categories = [
-                'कार्यम निधी',
-                'उत्सव देणगी',
-                'धार्मिक कार्य',
-                'अन्नदान',
-                'इतर'
-            ];
+            const categories = ['कार्यम निधी', 'उत्सव देणगी', 'धार्मिक कार्य', 'अन्नदान', 'इतर'];
             // Draw table headers
             doc.fontSize(10).font('Devanagari').fillColor('#000');
             // Draw outer border
@@ -161,11 +176,11 @@ async function createPDFReceipt(donation) {
             doc.text('रक्कम रुपये', col2X + 10, tableStartY + 10);
             // Map donation breakup to categories
             const categoryMap = {
-                'TEMPLE_GENERAL': 'कार्यम निधी',
-                'FESTIVAL': 'उत्सव देणगी',
-                'POOJA': 'धार्मिक कार्य',
-                'ANNADAAN': 'अन्नदान',
-                'OTHER': 'इतर'
+                TEMPLE_GENERAL: 'कार्यम निधी',
+                FESTIVAL: 'उत्सव देणगी',
+                POOJA: 'धार्मिक कार्य',
+                ANNADAAN: 'अन्नदान',
+                OTHER: 'इतर',
             };
             // Draw category rows
             categories.forEach((category, index) => {
@@ -201,7 +216,8 @@ async function createPDFReceipt(donation) {
             doc.fontSize(11).font('Devanagari').fillColor('#000');
             doc.text('एकूण', col1X + 10, totalRowY + 10, { continued: true });
             doc.font('Helvetica-Bold').text(' / Total');
-            doc.font('Helvetica-Bold').text(`₹ ${donation.total.toFixed(2)}`, col2X + 10, totalRowY + 10);
+            doc.font('Devanagari').text('₹ ', col2X + 10, totalRowY + 10, { continued: true });
+            doc.font('Helvetica-Bold').text(donation.total.toFixed(2));
             doc.y = totalRowY + rowHeight + 10;
             doc.moveDown(0.8);
             // Amount in words (अक्षरी रक्कम रु.)
@@ -234,18 +250,35 @@ async function createPDFReceipt(donation) {
     });
 }
 /**
+ * Resolve S3 key for a receipt.
+ * New format (NNNNN-YYYY-YY): receipts/YYYY-YY/NNNNN-YYYY-YY.pdf
+ * Old format (YYYY-NNNNN):     receipts/YYYY/YYYY-NNNNN.pdf  (backward compat)
+ */
+function s3KeyForReceipt(receiptNo) {
+    const parsed = (0, id_generator_1.parseReceiptNo)(receiptNo);
+    if (parsed) {
+        // New format: extract FY label from receipt number (e.g. "00071-2025-26" → "2025-26")
+        const newMatch = receiptNo.match(/^\d{5}-(\d{4}-\d{2})$/);
+        if (newMatch) {
+            return `receipts/${newMatch[1]}/${receiptNo}.pdf`;
+        }
+        // Old format: use calendar year
+        return `receipts/${parsed.year}/${receiptNo}.pdf`;
+    }
+    return `receipts/unknown/${receiptNo}.pdf`;
+}
+/**
  * Upload receipt to S3
- * Stores receipt in receipts/<year>/<receiptNo>.pdf
+ * New receipts: receipts/YYYY-YY/NNNNN-YYYY-YY.pdf
  *
- * @param receiptNo - Receipt number (e.g., "2025-00071")
+ * @param receiptNo - Receipt number
  * @param content - Receipt content (PDF buffer)
  * @param contentType - MIME type (default: application/pdf)
  * @returns S3 key where receipt was stored
  */
 async function uploadReceiptToS3(receiptNo, content, contentType = 'application/pdf') {
     const bucketName = (0, dynamo_client_1.getReceiptsBucketName)();
-    const year = receiptNo.split('-')[0];
-    const key = `receipts/${year}/${receiptNo}.pdf`;
+    const key = s3KeyForReceipt(receiptNo);
     try {
         await s3Client.send(new client_s3_1.PutObjectCommand({
             Bucket: bucketName,
@@ -282,8 +315,30 @@ async function createAndUploadReceipt(donation) {
  */
 function numberToWordsEnglish(num) {
     const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine'];
-    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
-    const teens = ['Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = [
+        '',
+        '',
+        'Twenty',
+        'Thirty',
+        'Forty',
+        'Fifty',
+        'Sixty',
+        'Seventy',
+        'Eighty',
+        'Ninety',
+    ];
+    const teens = [
+        'Ten',
+        'Eleven',
+        'Twelve',
+        'Thirteen',
+        'Fourteen',
+        'Fifteen',
+        'Sixteen',
+        'Seventeen',
+        'Eighteen',
+        'Nineteen',
+    ];
     if (num === 0)
         return 'Zero';
     const convert = (n) => {
@@ -296,10 +351,12 @@ function numberToWordsEnglish(num) {
         if (n < 1000)
             return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convert(n % 100) : '');
         if (n < 100000)
-            return convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : '');
+            return (convert(Math.floor(n / 1000)) + ' Thousand' + (n % 1000 ? ' ' + convert(n % 1000) : ''));
         if (n < 10000000)
-            return convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : '');
-        return convert(Math.floor(n / 10000000)) + ' Crore' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+            return (convert(Math.floor(n / 100000)) + ' Lakh' + (n % 100000 ? ' ' + convert(n % 100000) : ''));
+        return (convert(Math.floor(n / 10000000)) +
+            ' Crore' +
+            (n % 10000000 ? ' ' + convert(n % 10000000) : ''));
     };
     const rupees = Math.floor(num);
     const paise = Math.round((num - rupees) * 100);
@@ -331,8 +388,10 @@ function numberToWordsMarathi(num) {
         if (n < 100000)
             return convert(Math.floor(n / 1000)) + ' हजार' + (n % 1000 ? ' ' + convert(n % 1000) : '');
         if (n < 10000000)
-            return convert(Math.floor(n / 100000)) + ' लाख' + (n % 100000 ? ' ' + convert(n % 100000) : '');
-        return convert(Math.floor(n / 10000000)) + ' कोटी' + (n % 10000000 ? ' ' + convert(n % 10000000) : '');
+            return (convert(Math.floor(n / 100000)) + ' लाख' + (n % 100000 ? ' ' + convert(n % 100000) : ''));
+        return (convert(Math.floor(n / 10000000)) +
+            ' कोटी' +
+            (n % 10000000 ? ' ' + convert(n % 10000000) : ''));
     };
     const rupees = Math.floor(num);
     const paise = Math.round((num - rupees) * 100);
@@ -352,8 +411,7 @@ function numberToWordsMarathi(num) {
  */
 async function getReceiptDownloadUrl(receiptNo) {
     const bucketName = (0, dynamo_client_1.getReceiptsBucketName)();
-    const year = receiptNo.split('-')[0];
-    const key = `receipts/${year}/${receiptNo}.pdf`;
+    const key = s3KeyForReceipt(receiptNo);
     try {
         const command = new client_s3_1.GetObjectCommand({
             Bucket: bucketName,
